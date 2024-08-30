@@ -1,0 +1,52 @@
+
+- name: Ensure ocp dir exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/ocp"
+    state: directory
+    mode: "0700"
+    owner: "{{ ocp_user }}"
+    group: "{{ ocp_user }}"
+
+- name: Create secret template
+  ansible.builtin.template:
+    src: local-secret.json.j2
+    dest: "{{ ansible_env.HOME }}/ocp/local-secret.json"
+    mode: "0600"
+    owner: "{{ ocp_user }}"
+    group: "{{ ocp_user }}"
+
+- name: Mirror content
+  ansible.builtin.command: "{{ lookup('ansible.builtin.template', 'mirror_cmd.j2') }}"
+  args:
+    chdir: "{{ ansible_env.HOME }}/ocp"
+  changed_when: false
+  when: mirror | default(false)
+
+- name: Create reference script for the mirror command
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/ocp/mirror.sh"
+    mode: "0700"
+    owner: "{{ ocp_user }}"
+    group: "{{ ocp_user }}"
+    content: "{{ lookup('ansible.builtin.template', 'mirror_cmd.j2') }}"
+  vars:
+    dry_run: true
+
+- name: Ensure custom local mirror openshift-install binary is present
+  ansible.builtin.command: "{{ lookup('ansible.builtin.template', 'extract_cmd.j2') }}"
+  args:
+    chdir: "{{ ansible_env.HOME }}/ocp"
+    creates: "{{ ansible_env.HOME }}/ocp/openshift-install"
+
+- name: Create reference script for the extract openshift-install command
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/ocp/extract.sh"
+    mode: "0700"
+    owner: "{{ ocp_user }}"
+    group: "{{ ocp_user }}"
+    content: "{{ lookup('ansible.builtin.template', 'extract_cmd.j2') }}"
+
+- name: Set install from mirror
+  ansible.builtin.set_fact:
+    ocp_install_binary: "{{ ansible_env.HOME }}/ocp/openshift-install"
+    

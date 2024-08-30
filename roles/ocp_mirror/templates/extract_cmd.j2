@@ -1,0 +1,1 @@
+oc adm release extract -a {{ ocp_local_secret_json }} --to='{{ ansible_env.HOME }}/ocp' --command=openshift-install "{{ ocp_local_registry}}/{{ ocp_local_repo }}/{{ ocp_release_name }}:{{ ocp_release }}"

@@ -1,0 +1,40 @@
+apiVersion: v1
+baseDomain: {{ basedomain }} 
+compute: 
+- hyperthreading: Enabled 
+  name: worker
+  replicas: {{ worker_replicas }}
+controlPlane: 
+  hyperthreading: Enabled 
+  name: master
+  replicas: {{ master_replicas }}
+metadata:
+  name: {{ ocp_cluster_name }} 
+networking:
+  clusterNetwork:
+{% for network in clusternetwork %}
+  - cidr: {{ network.cidr }}
+    hostprefix: {{ network.hostprefix }}
+{% endfor %}
+  networkType: {{ ocp_networktype }} 
+  serviceNetwork:
+{% for network in servicenetwork %}
+  - {{ network }}
+{% endfor %}
+platform:
+  none: {} 
+pullSecret: '{{ ocp_pullsecret }}' 
+sshKey: '{{ ocp_core_sshkey }}'
+{% if ocp_local_registry is defined %}
+imageDigestSources:
+- mirrors:
+  - {{ ocp_local_registry }}/{{ ocp_local_repo }}/{{ ocp_release_name }}
+  source: {{ ocp_remote_registry }}/{{ ocp_product_repo }}/{{ ocp_release_name }}
+- mirrors:
+  - {{ ocp_local_registry }}/{{ ocp_local_repo }}/{{ ocp_release_name }}
+  source: {{ ocp_remote_registry }}/{{ ocp_product_repo }}/{{ ocp_release_name }}-content 
+{% endif %}
+{% if additionaltrustbundle is defined %}
+additionalTrustBundle: |
+  {{ additionaltrustbundle|indent(2) }}
+{% endif %}

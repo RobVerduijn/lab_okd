@@ -1,0 +1,50 @@
+- name: Ensure ocp dir is absent
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/ocp"
+    state: absent
+  when: delete | default(false)
+
+- name: Ensure ocp dir is present
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/ocp"
+    state: directory
+    mode: "0700"
+
+- name: Create install-config.yaml
+  ansible.builtin.template:
+    src: install-config.yaml.j2
+    dest: "{{ ansible_env.HOME }}/ocp/install-config.yaml"
+    mode: "0700"
+    owner: "{{ ocp_user }}"
+    group: "{{ ocp_user }}"
+
+- name: Debug binary
+  ansible.builtin.debug:
+    var: ocp_install_binary
+
+- name: Create manifest files
+  ansible.builtin.command: "{{ ocp_install_binary }} create manifests"
+  args:
+    chdir: "{{ ansible_env.HOME }}/ocp" 
+
+- name: Create ignition files
+  ansible.builtin.command: "{{ ocp_install_binary }} create ignition-configs"
+  args:
+    chdir: "{{ ansible_env.HOME }}/ocp" 
+
+- name: Copy ignition files to ignition dir on webserver
+  ansible.builtin.copy:
+    src: "{{ ansible_env.HOME }}/ocp/{{ ignitionfile }}"
+    dest: "{{ ocp_webserver_coreos_path }}/{{ ignitionfile }}"
+    setype: httpd_sys_content_t
+    mode: "0644"
+    owner: root
+    group: root
+  delegate_to: "{{ webserver }}"
+  remote_user: root
+  loop_control:
+    loop_var: ignitionfile
+  loop:
+    - bootstrap.ign
+    - master.ign
+    - worker.ign

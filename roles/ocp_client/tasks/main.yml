@@ -1,0 +1,83 @@
+
+- name: Use dnf to install the ocp client packages
+  when: ocp_client_rpms | bool
+  remote_user: root
+  block:
+    - name: Install ocp client packages
+      ansible.builtin.dnf:
+        name: '{{ wanted_packages | default([]) }}'
+        state: present
+        allow_downgrade: true
+      register: install_ocp_client_packages
+      when: ansible_facts['packages'].keys() | intersect(ocp_client_packages | default([])) | length > 0
+      diff: true
+
+- name: Install the ocp client packages
+  when: not ocp_client_rpms | bool
+  remote_user: root
+  block:
+    - name: Check if ocp client files are installed
+      ansible.builtin.stat:
+        path: "{{ file }}"
+      register: ocp_client_files
+      loop_control:
+        loop_var: file
+      loop:
+        - /usr/bin/oc
+        - /usr/bin/kubectl
+        - /usr/bin/openshift-install
+
+    - name: Set file_missing
+      ansible.builtin.set_fact:
+        file_missing: true
+      when: not result['stat']['exists']
+      loop: "{{ ocp_client_files['results'] }}"
+      loop_control:
+        loop_var: result
+
+    - name: Check if openshift installed version matches playbook version
+      ansible.builtin.command: openshift-install version
+      register: installed_ocp_release
+      when: file_missing is not defined
+      changed_when: false
+
+    - name: Set update if version missmatch
+      ansible.builtin.set_fact:
+        update_ocp_client_files: true
+      when:
+        - (installed_ocp_release['stdout_lines'][0] | default('')).split(' ')[1] | default('') != ocp_release
+
+    - name: Update or install okd
+      delegate_to: "{{ inventory_hostname }}"
+      remote_user: root
+      when: >-
+        (update_ocp_client_files | default(false) | bool)
+        or
+        (file_missing | default(false) | bool)
+      block:
+        - name: Remove old openshift-install and oc binaries
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - /usr/bin/oc
+            - /usr/bin/openshift-install
+            - /usr/bin/kubectl
+            - /usr/bin/README.md
+
+        - name: Download and unpack openshift client and install
+          ansible.builtin.unarchive:
+            src: "{{ item }}"
+            dest: /usr/bin
+            remote_src: true
+          loop:
+            - "{{ ocp_client_url }}"
+            - "{{ ocp_install_url }}"
+
+        - name: Create bash completion files
+          ansible.builtin.shell: '/usr/bin/{{ item }} completion bash > /etc/bash_completion.d/{{ item }}'
+          loop:
+            - openshift-install
+            - oc
+            - kubectl
+          changed_when: false

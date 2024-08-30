@@ -1,0 +1,7 @@
+# openshift client/installer
+ocp_client_url: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/
+# rhel core-os
+ocp_coreos_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/
+
+ocp_client_rpms: false
+ocp_release:

@@ -1,0 +1,5 @@
+ocp_user: rob
+#ocp_local_registry: registry.tjako.thuis:9999
+ocp_local_secret_json: local-secret.json
+ocp_install_binary: /usr/bin/openshift-install
+webserver: freeipa02.tjako.thuis

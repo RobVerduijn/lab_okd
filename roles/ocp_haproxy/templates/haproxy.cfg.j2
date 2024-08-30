@@ -1,0 +1,118 @@
+#---------------------------------------------------------------------
+# Global settings
+#---------------------------------------------------------------------
+global
+    log         127.0.0.1 local2
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    maxconn     4000
+    user        haproxy
+    group       haproxy
+    daemon
+    # turn on stats unix socket
+    stats socket /var/lib/haproxy/stats
+    # utilize system-wide crypto-policies
+    ssl-default-bind-ciphers PROFILE=SYSTEM
+    ssl-default-server-ciphers PROFILE=SYSTEM
+
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will
+# use if not designated in their block
+#---------------------------------------------------------------------
+defaults
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  dontlognull
+    option http-server-close
+    option forwardfor       except 127.0.0.0/8
+    option                  redispatch
+    retries                 3
+    timeout http-request    10s
+    timeout queue           1m
+    timeout connect         10s
+    timeout client          1m
+    timeout server          1m
+    timeout http-keep-alive 10s
+    timeout check           10s
+    maxconn                 3000
+
+#---------------------------------------------------------------------
+# round robin balancing for RHOCP Kubernetes API Server
+#---------------------------------------------------------------------
+frontend k8s_api
+    bind {{ ansible_eth0['ipv4']['address'] }}:6443
+    mode tcp
+    default_backend k8s_api_backend
+
+backend k8s_api_backend
+    balance roundrobin
+    mode tcp
+{% if enable_bootstrap | bool %}
+    server {{ bootstrap['name'] }} {{ bootstrap['ip'] }}:6443 check
+{% endif %}
+{% for server in k8s_api_backend %}
+    server {{ server['name'] }} {{ server['ip'] }}:6443 check
+{% endfor %}
+
+# ---------------------------------------------------------------------
+# round robin balancing for RHOCP Machine Config Server
+# ---------------------------------------------------------------------
+
+frontend machine_config
+    bind {{ ansible_eth0['ipv4']['address'] }}:22623
+    mode tcp
+    default_backend machine_config_backend
+
+backend machine_config_backend
+    balance roundrobin
+    mode tcp
+{% if enable_bootstrap | bool %}
+    server {{ bootstrap['name'] }} {{ bootstrap['ip'] }}:22623 check
+{% endif %}
+{% for server in machine_config_backend %}
+    server {{ server['name'] }} {{ server['ip'] }}:22623 check
+{% endfor %}
+
+# ---------------------------------------------------------------------
+# round robin balancing for RHOCP Ingress Insecure Port
+# ---------------------------------------------------------------------
+
+frontend tlsrouter
+    bind {{ ansible_eth0['ipv4']['address'] }}:443
+    mode tcp
+    default_backend ingress_secure_backend
+
+backend ingress_secure_backend
+    balance roundrobin
+    mode tcp
+{% for server in ingress_secure_backend %}
+    server {{ server['name'] }} {{ server['ip'] }}:443 check
+{% endfor %}
+
+# ---------------------------------------------------------------------
+# round robin balancing for RHOCP Ingress Secure Port
+# ---------------------------------------------------------------------
+
+frontend ingress_insecure
+    bind {{ ansible_eth0['ipv4']['address'] }}:80
+    mode tcp
+    default_backend ingress_insecure_backend
+
+backend ingress_insecure_backend
+    balance roundrobin
+    mode tcp
+{% for server in ingress_insecure_backend %}
+    server {{ server['name'] }} {{ server['ip'] }}:80 check
+{% endfor %}
+
+# ---------------------------------------------------------------------
+# Exposing HAProxy Statistic Page
+# ---------------------------------------------------------------------
+listen stats
+    bind *:32700
+    stats enable
+    stats uri /
+    stats refresh 10s
+#    stats hide-version
+#    stats auth admin:redhat

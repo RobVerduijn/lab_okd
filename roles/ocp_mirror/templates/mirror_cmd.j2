@@ -1,0 +1,2 @@
+oc adm release mirror -a {{ ocp_local_secret_json }} --print-mirror-instructions=idms --from={{ ocp_remote_registry }}/{{ ocp_product_repo }}/{{ ocp_release_name }}:{{ ocp_release }} --to={{ ocp_local_registry}}/{{ ocp_local_repo }}/{{ ocp_release_name}} --to-release-image={{ ocp_local_registry}}/{{ ocp_local_repo }}/{{ ocp_release_name }}:{{ ocp_release }}
+{%- if dry_run is defined %} --dry-run{% endif %}

@@ -1,0 +1,11 @@
+- name: Ensure the bootstrap status
+  debug:
+    msg: Ensure the bootstrap is {{ enable_bootstrap | string }}
+
+- name: Configure haproxy
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    mode: 0644
+  notify:
+    - Restart haproxy

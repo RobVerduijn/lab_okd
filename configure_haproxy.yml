@@ -1,0 +1,19 @@
+- name: Configure the haproxy system
+  hosts: haproxy
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: Ensure we know if we must set bootstrap
+      ansible.builtin.assert:
+        that:
+         - enable_bootstrap
+        fail_msg: "enable_bootstrap is not propperly set"
+    
+    - name: Include variables for haproxy
+      ansible.builtin.group_by:
+        key: haproxy
+    
+    - name: Configure haproxy
+      ansible.builtin.include_role:
+        name: ocp_haproxy
