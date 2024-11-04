@@ -1,0 +1,22 @@
+graph lab1 {
+   node [shape=plaintext,fontsize=16, label=""]
+
+   bgcolor=white;
+   edge [arrowsize=1, color=black];
+   graph[penwidth=1, labelloc="b"];
+
+   subgraph switch {switch[image="icons/icons8-switch-96.png",label="Network\n172.16.1.0/24\n\n\n\n\n\n\n" labelloc="t"];};
+   subgraph cluster {
+      master01[image="icons/icons8-server-96.png",label="\n\n\n\n\nMaster01\n172.16.1.38" ];
+      master02[image="icons/icons8-server-96.png",label="\n\n\n\n\nMaster02\n172.16.1.39" ];
+      master03[image="icons/icons8-server-96.png",label="\n\n\n\n\nMaster03\n172.16.1.40" ];
+      bastion[image="icons/icons8-server-96.png",label="\n\n\n\n\nBastion\n172.16.1.41" ];
+      proxy[image="icons/icons8-server-96.png",label="\n\n\n\n\nproxy\n172.16.1.9" ];
+   };
+   
+   subgraph Services {services[image="icons/icons8-server-96.png",label="\n\n\n\n\nServices\n172.16.1.9" ];};
+
+   
+   switch -- {master01,master02,master03,bastion,proxy,services}
+}
+

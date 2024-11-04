@@ -5,10 +5,9 @@ ocp_networktype: OVNKubernetes
 ocp_coreos_url: https://quay.io/repository/
 
 ocp_client_rpms: false
-#ocp_release: 4.7.0-0.okd-2021-07-03-190901
-#ocp_release: 4.15.0-0.okd-2024-03-10-010116
-ocp_release: 4.15.0-0.okd-scos-2024-01-18-223523
+#ocp_release: 4.15.0-0.okd-scos-2024-01-18-223523
 #ocp_release: 4.16.0-0.okd-scos-2024-08-21-155613  # broken
+ocp_release: 4.16.0-0.okd-scos-2024-09-24-151747
 
 # local registry url = ocp_local_registry/ocp_local_repository/ocp_release
 ocp_product_repo: openshift
@@ -17,9 +16,7 @@ ocp_local_repo: "{{ ocp_product_repo }}"
 ocp_remote_registry: quay.io
 ocp_release_name: okd
 
-#ocp_client_url: https://github.com/okd-project/okd/releases/download/{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz
 ocp_client_url: https://github.com/okd-project/okd-scos/releases/download/{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz
-#ocp_install_url: https://github.com/okd-project/okd/releases/download/{{ ocp_release }}/openshift-install-linux-{{ ocp_release }}.tar.gz
 ocp_install_url: https://github.com/okd-project/okd-scos/releases/download/{{ ocp_release }}/openshift-install-linux-{{ ocp_release }}.tar.gz
 ocp_webserver_coreos_path: /network/repo/scos
 

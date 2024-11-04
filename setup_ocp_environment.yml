@@ -6,22 +6,38 @@
     - name: Ensure we know what we must install
       ansible.builtin.assert:
         that:
-         - ocp_version is defined
-         - ocp_version in ['okd','openshift']
+          - ocp_version is defined
+          - ocp_version in ['okd','openshift']
         fail_msg: "ocp_version is not propperly set"
-    
+
     - name: Include variables for {{ ocp_version }}
       ansible.builtin.group_by:
         key: "{{ ocp_version }}"
 
+    - name: The version of the installation
+      ansible.builtin.debug:
+        msg: We will be installing {{ ocp_version }} release {{ ocp_release }}
+
+    - name: The status of mirror installation is
+      ansible.builtin.debug:
+        msg: Mirroring of the registry will {{ ocp_local_registry | default(false) | ternary("", "NOT!!") }} be performed
+
+    - name: The deleteion of the ocp dir
+      ansible.builtin.debug:
+        msg: The ocp dir will {{ delete | default(false) | ternary("", "NOT!!") }} be deleted first
+
     - name: Install ocp client
       ansible.builtin.include_role:
         name: ocp_client
-    
+
+    - name: Setup pxe content
+      ansible.builtin.include_role:
+        name: ocp_pxe_content
+
     - name: Create ocp image mirror script and secret
       ansible.builtin.include_role:
         name: ocp_mirror
-      when: ocp_local_registry is defined
+      when: ocp_local_registry | default(false)
 
     - name: Create ocp ignition files
       ansible.builtin.include_role:
