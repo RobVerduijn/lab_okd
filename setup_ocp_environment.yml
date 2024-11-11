@@ -3,20 +3,9 @@
   gather_facts: true
 
   tasks:
-    - name: Ensure we know what we must install
-      ansible.builtin.assert:
-        that:
-          - ocp_version is defined
-          - ocp_version in ['okd','openshift']
-        fail_msg: "ocp_version is not propperly set"
-
-    - name: Include variables for {{ ocp_version }}
-      ansible.builtin.group_by:
-        key: "{{ ocp_version }}"
-
     - name: The version of the installation
       ansible.builtin.debug:
-        msg: We will be installing {{ ocp_version }} release {{ ocp_release }}
+        msg: We will be installing release {{ ocp_release }}
 
     - name: The status of mirror installation is
       ansible.builtin.debug:

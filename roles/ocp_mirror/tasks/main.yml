@@ -1,4 +1,3 @@
-
 - name: Ensure ocp dir exists
   ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/ocp"
@@ -49,4 +48,3 @@
 - name: Set install from mirror
   ansible.builtin.set_fact:
     ocp_install_binary: "{{ ansible_env.HOME }}/ocp/openshift-install"
-    

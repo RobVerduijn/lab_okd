@@ -1,7 +1,6 @@
 vm_name: bootstrap
-#ram: 16777216
-ram: 12582912
-ram_unit: KiB
+ram: 8
+ram_unit: GiB
 vcpu: 4
 storage_location: /var/lib/libvirt/images/{{ vm_name }}.qcow2
 size: 100G

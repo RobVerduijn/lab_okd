@@ -1,1 +1,3 @@
-efi_secure_boot: false
+# don't set this to true unless you are sure that the entire pxe boot chain
+# is configured properly for secure uefi booting
+ocp_vm_efi_secure_boot: false

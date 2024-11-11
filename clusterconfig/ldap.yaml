@@ -1,0 +1,79 @@
+---
+# okd ldap docs
+# https://docs.okd.io/latest/authentication/identity_providers/configuring-ldap-identity-provider.html
+# ipa openshift ldap example
+# https://xlark.sdf.org/blog/linuxunix/2022/05/11/ipa-openshift-ldap.html
+apiVersion: v1
+kind: Secret
+metadata:
+    name: ldap-secret
+    namespace: openshift-config
+type: Opaque
+data:
+    bindPassword: xxxxxx
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: custom-ca-oauth
+    namespace: openshift-config
+data:
+    # get the ipa ca.crt at: https://ipaserver/ipa/config/ca.crt
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      MIIEizCCAvOgAwIBAgIBATANBgkqhkiG9w0BAQsFADA2MRQwEgYDVQQKDAtUSkFL
+      Ty5USFVJUzEeMBwGA1UEAwwVQ2VydGlmaWNhdGUgQXV0aG9yaXR5MB4XDTIzMDIx
+      MjAwMDkxOFoXDTQzMDIxMjAwMDkxOFowNjEUMBIGA1UECgwLVEpBS08uVEhVSVMx
+      HjAcBgNVBAMMFUNlcnRpZmljYXRlIEF1dGhvcml0eTCCAaIwDQYJKoZIhvcNAQEB
+      BQADggGPADCCAYoCggGBAL+3o+ekNMe+ZdkkU2k/efSKoAUujQ72D6lQKLuXB0my
+      xa94+GilOulF25S59bpemrd5O3kYcXCAEhaP6SjQYxAW5lDK5pNq8F9VRLC6q3Xy
+      2V7kT4a/blR3+zjTh/aqtdV749/HNfH6jleesCW5hq7fe+cckskXQL2j+nRL9Y5z
+      YEU3QueYBUqGlhJPvtFSmfaJwEQZi0dRJrJ4bED0zZG0mH+VJ0cXbBRO4vudag86
+      ww7Qj/f+VYXnuzMbniR1j0SQUPEVSoUTWGRE+QxcBtZ3JxizEfSGPwCqaQKfaLGo
+      sH2lxXC/2vazUAHhQScPVbt/nnk5+SHsLwKCx1XeyYHLB7yr+6exN29W1m9OBwXg
+      ioH2thkA+S4XkE4SBwlbFeHpQ9TDdBctgeUm02JFNlfzoZP3msu73zSdLSJ6THNJ
+      +BhWEu3QPCR4peFimjZQqrRXp5ncOq+tuA/ehVsAU5KU0PE2ZVCzbKo1u+ta4PnE
+      GmnopUfjprDaxw+5k1DdMwIDAQABo4GjMIGgMB8GA1UdIwQYMBaAFK3MaxyVsYur
+      g6Vw4sMnx+lD34cbMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgHGMB0G
+      A1UdDgQWBBStzGsclbGLq4OlcOLDJ8fpQ9+HGzA9BggrBgEFBQcBAQQxMC8wLQYI
+      KwYBBQUHMAGGIWh0dHA6Ly9pcGEtY2EudGpha28udGh1aXMvY2Evb2NzcDANBgkq
+      hkiG9w0BAQsFAAOCAYEAP8MAk+dLUUZDP3fpMoND9m/6/YFb5kJh7onMeF8odK2O
+      c4/TzLHxaaOT7Lu0f/v846aXxxIyVg9541zrSAN2rHskujXJDuI//XhuGmwG2uSi
+      fRMu4V9JdX4SUjRc7j3Gq/m+/Xmnio4Et9WQFYw0axd1WJ8x0rNFj2CPKeqroazs
+      BK7qPEyaLw1f0dzlGAOWuTVCnnMZASsRG4dGssu0yI3Dqyi2Iy/JxBGuj4KdfDbB
+      qsHTCA9XDXMiTUTUUIRZfzVlg4uPYQYhDLJO6cX0ts6i2eAHn89a2XhG6boZRul/
+      zSt3ifyGo6u62hya9NsT1D2kU+2aarGDQ1qatSM10/+nDBOdYuZBG37sWd4Hl2FL
+      4olAnq/gTB6SlXztpxq4b+AwrZvMRtQKG1zrF83jyilougnKYuynCQogp1WSgW51
+      6UjZGKWj7RWLDylqIALkfMctzJOA3gGBP7N9Mk0Pgj80jTo1Nx9heF3zOAsTvf4+
+      MHmCGaCAYSZjbfxAWwSd
+      -----END CERTIFICATE-----
+---
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+    name: cluster
+spec:
+    identityProviders:
+        - ldap:
+              attributes:
+                  email:
+                      - mail
+                  id:
+                      - dn
+                  name:
+                      - cn
+                  preferredUsername:
+                      - uid
+              # freeipa ldap bind account howto
+              # https://www.freeipa.org/page/HowTo/LDAP
+              bindDN: uid=okd,cn=sysaccounts,cn=etc,dc=tjako,dc=thuis
+              bindPassword:
+                  name: ldap-secret
+              ca:
+                  name: custom-ca-oauth
+              insecure: false
+              url: >-
+                  ldaps://freeipa02.tjako.thuis/cn=users,cn=accounts,dc=tjako,dc=thuis?uid
+          mappingMethod: claim
+          name: tjako.thuis
+          type: LDAP

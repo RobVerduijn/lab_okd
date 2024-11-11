@@ -25,12 +25,16 @@
 - name: Create manifest files
   ansible.builtin.command: "{{ ocp_install_binary }} create manifests"
   args:
-    chdir: "{{ ansible_env.HOME }}/ocp" 
+    chdir: "{{ ansible_env.HOME }}/ocp"
+  tags:
+    - skip_ansible_lint
 
 - name: Create ignition files
   ansible.builtin.command: "{{ ocp_install_binary }} create ignition-configs"
   args:
-    chdir: "{{ ansible_env.HOME }}/ocp" 
+    chdir: "{{ ansible_env.HOME }}/ocp"
+  tags:
+    - skip_ansible_lint
 
 - name: Copy ignition files to ignition dir on webserver
   ansible.builtin.copy:

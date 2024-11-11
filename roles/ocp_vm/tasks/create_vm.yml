@@ -22,10 +22,10 @@
           ansible.builtin.file:
             path: "{{ storage_location }}"
             state: absent
-        
+
         - name: Delete efi nvram {{ vm_name }}
           ansible.builtin.file:
-            path:  /var/lib/libvirt/qemu/nvram/{{ vm_name }}_VARS.qcow2
+            path: /var/lib/libvirt/qemu/nvram/{{ vm_name }}_VARS.qcow2
             state: absent
 
         - name: Undefine vm {{ vm_name }}

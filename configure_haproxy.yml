@@ -4,11 +4,18 @@
   become: true
 
   tasks:
-    - name: Ensure we know if we must set bootstrap
-      ansible.builtin.assert:
+    - name: Ensure bootstrap is set
+      ansible.builtin.set_fact:
+        enable_bootstrap: "{{ enable_bootstrap | default(false) }}"
+
+    - name: Show what bootstrap is set to
+      ansible.builtin.debug:
         that:
           - enable_bootstrap
-        fail_msg: "enable_bootstrap is not propperly set"
+        success_msg: "enable_bootstrap is set to {{ enable_bootstrap | string }}"
+
+    - name: Gather package facts
+      ansible.builtin.package_facts:
 
     - name: Include variables for haproxy
       ansible.builtin.group_by:
