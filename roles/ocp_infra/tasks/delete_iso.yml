@@ -1,0 +1,4 @@
+- name: Delete kickstart iso
+  ansible.builtin.file:
+    path: "{{ ocp_infra_libvirt_storage_location }}/ks.iso"
+    state: absent

@@ -1,9 +1,0 @@
-vm_name: bootstrap
-ram: 8
-ram_unit: GiB
-vcpu: 4
-storage_location: /var/lib/libvirt/images/{{ vm_name }}.qcow2
-size: 100G
-mac_address: '52:54:00:00:00:01'
-bridge: br0
-boot: efi

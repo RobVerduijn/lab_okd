@@ -1,0 +1,33 @@
+# don't set this to true unless you are sure that the entire pxe boot chain
+# is configured properly for secure uefi booting
+ocp_infra_libvirt_secure_boot: false
+ocp_infra_libvirt_boot: efi
+ocp_infra_libvirt_storage_location: /var/lib/libvirt/images
+
+ocp_infra_root_password: geheim
+ocp_infra_admin: admin
+ocp_infra_admin_password: geheim
+
+ocp_infra_rocky_iso_url: https://download.rockylinux.org/pub/rocky/9/isos/x86_64/Rocky-9-latest-x86_64-minimal.iso
+ocp_infra_role:
+  svc:
+    ram: 2
+    ramunit: GiB
+    vcpu: 2
+    sda: 20
+  bootstrap:
+    ram: 8
+    ramunit: GiB
+    vcpu: 2
+    sda: 100
+  master:
+    ram: 8
+    ramunit: GiB
+    vcpu: 2
+    sda: 100
+  worker:
+    ram: 8
+    ramunit: GiB
+    vcpu: 2
+    sda: 100
+    sdb: 100

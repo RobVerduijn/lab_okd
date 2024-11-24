@@ -1,0 +1,17 @@
+- name: Create kickstart
+  ansible.builtin.template:
+    src: /home/rob/code/lab_ocp/roles/ocp_infra/templates/rocky-9-ks.cfg.j2
+    dest: /tmp/ks.cfg
+    mode: '0644'
+    owner: "{{ lookup('ansible.builtin.env', 'USER') }}"
+
+- name: Create kickstart iso
+  ansible.builtin.command: genisoimage -output {{ ocp_infra_libvirt_storage_location }}/ks.iso -volid OEMDRV -joliet -rock /tmp/ks.cfg
+  tags:
+    - skip_ansible_lint
+
+- name: Download rocky iso
+  ansible.builtin.get_url:
+    url: "{{ ocp_infra_rocky_iso_url }}"
+    dest: "{{ ocp_infra_libvirt_storage_location }}/{{ (ocp_infra_rocky_iso_url | ansible.builtin.split('/'))[-1] }}"
+    mode: "0644"

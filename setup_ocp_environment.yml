@@ -1,37 +1,88 @@
 - name: Configure the bastion system
-  hosts: bastion
-  gather_facts: true
+  hosts: localhost
+  gather_facts: false
+  become: false
 
   tasks:
+    - name: Init all
+      ansible.builtin.set_fact:
+        init_svc: true
+        init_cluster: true
+      when: init_all | default('false') | bool
+
+    - name: Ensure cluster is set
+      ansible.builtin.set_fact:
+        cluster: "{{ cluster | default('ocp_local') }}"
+
+    - name: Load vars from group {{ cluster }}
+      ansible.builtin.group_by:
+        key: "{{ cluster }}"
+
     - name: The version of the installation
       ansible.builtin.debug:
-        msg: We will be installing release {{ ocp_release }}
+        msg: We will be installing ocp release {{ ocp_release }} on cluster {{ cluster }}
 
-    - name: The status of mirror installation is
-      ansible.builtin.debug:
-        msg: Mirroring of the registry will {{ ocp_local_registry | default(false) | ternary("", "NOT!!") }} be performed
+    - name: Warn about cluster init
+      when: init_cluster | default(false) | bool
+      ansible.builtin.pause:
+        prompt: |-
+          The cluster reinitializing cluster: {{ cluster }}
+          This means all systems from this cluster will be wiped
+          And the local configuration directory deleted
+          Press enter to continue
 
-    - name: The deleteion of the ocp dir
-      ansible.builtin.debug:
-        msg: The ocp dir will {{ delete | default(false) | ternary("", "NOT!!") }} be deleted first
-
-    - name: Install ocp client
+    - name: Configure services
       ansible.builtin.include_role:
-        name: ocp_client
+        name: ocp_infra
+      when: init_svc | default(false) | bool
+      vars:
+        ocp_infra_init_svc: true
 
-    - name: Setup pxe content
+    - name: Create vm's
       ansible.builtin.include_role:
-        name: ocp_pxe_content
+        name: ocp_infra
+      when: init_cluster | default(false) | bool
 
-    - name: Create ocp image mirror script and secret
-      ansible.builtin.include_role:
-        name: ocp_mirror
-      when: ocp_local_registry | default(false)
+- name: Configure svc host
+  hosts: loadbalancer
+  gather_facts: false
+  become: false
+  remote_user: root
 
-    - name: Create ocp ignition files
-      ansible.builtin.include_role:
-        name: ocp_ignition_files
+  tasks:
+    - name: Start svc vm
+      community.libvirt.virt:
+        name: "svc"
+        state: running
+      delegate_to: localhost
 
-    - name: Create virtual machines
-      ansible.builtin.include_role:
-        name: ocp_vm
+    - name: Wait for system to become reachable
+      ansible.builtin.wait_for_connection:
+
+    - name: gather_facts
+      ansible.builtin.setup:
+
+#    - name: The status of mirror installation is
+#      ansible.builtin.debug:
+#        msg: Mirroring of the registry will {{ ocp_local_registry | default(false) | ternary("", "NOT!!") }} be performed
+
+#    - name: Install ocp client
+#      ansible.builtin.include_role:
+#        name: ocp_client
+#
+#    - name: Setup pxe content
+#      ansible.builtin.include_role:
+#        name: ocp_pxe_content
+#
+#    - name: Create ocp image mirror script and secret
+#      ansible.builtin.include_role:
+#        name: ocp_mirror
+#      when: ocp_local_registry | default(false)
+#
+#    - name: Create ocp ignition files
+#      ansible.builtin.include_role:
+#        name: ocp_ignition_files
+#
+#    - name: Create virtual machines
+#      ansible.builtin.include_role:
+#        name: ocp_vm

@@ -1,0 +1,24 @@
+- name: Create qcow2 image {{ host['name'] }}
+  ansible.builtin.command: >-
+    qemu-img create -f qcow2 -o preallocation=metadata
+    {{ ocp_infra_libvirt_storage_location }}/{{ host['name'] }}_{{ drive }}.qcow2
+    {{ ocp_infra_role[host['role']][drive] }}G
+  loop:
+    - sda
+    - sdb
+  loop_control:
+    loop_var: drive
+  when: ocp_infra_role[host['role']][drive] is defined
+  args:
+    creates: "{{ ocp_infra_libvirt_storage_location }}/{{ host['name'] }}_{{ drive }}.qcow2"
+
+- name: Define vm {{ host['name'] }}
+  community.libvirt.virt:
+    command: define
+    xml: "{{ lookup('template', 'vm.xml.j2') }}"
+
+- name: Start vm {{ host['name'] }}
+  community.libvirt.virt:
+    name: "{{ host['name'] }}"
+    state: running
+  when: host['role'] == 'svc'

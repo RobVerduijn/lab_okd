@@ -1,0 +1,90 @@
+{#- see https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/automatically_installing_rhel/kickstart-commands-and-options-reference_rhel-installer -#}
+{% set hostname = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'svc') | map(attribute='name'))[0] %}
+{% set gw = ocp_infra_network['gateway'] %}
+{% set ip = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'svc') | map(attribute='ip'))[0] %}
+{% set nm = ocp_infra_network['netmask'] %}
+{% set dns = ocp_infra_network['nameservers'] %}{# comma separated list of ip's #}
+{% set domain = ocp_infra_network['domain'] %}
+{% set webserver = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'svc') | map(attribute='ip'))[0] %}
+{% set timesources = ocp_infra_network['timesources'] %}
+{% set root_password = ocp_infra_root_password %}
+{% set admin_password = ocp_infra_admin_password %}
+{# default use the ~/.ssh/id_rsa.pub of the current user for root and admin #}
+{% set root_pubkey = ocp_infra_root_pubkey |
+  default(
+    lookup('ansible.builtin.file',
+      lookup('ansible.builtin.env', 'HOME')
+        + '/.ssh/id_rsa.pub')
+         )%}
+{%- set admin_pubkey = ocp_infra_admin_pubkey | default(root_pubkey) %}
+#version=RHEL9
+# Use graphical install
+graphical
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+
+%end
+
+# Keyboard layouts
+keyboard --xlayouts='us'
+# System language
+lang en_US.UTF-8
+
+# Network information
+network  --bootproto=static --device=link --gateway={{ gw }} --ip={{ ip }} --nameserver={{ dns }} --netmask={{ nm }} --ipv6=auto --activate --ipv4-dns-search={{ domain }}
+network  --hostname={{ hostname }}.{{ domain }}
+
+# Use CDROM installation media
+cdrom
+repo --name="minimal" --baseurl=file:///run/install/sources/mount-0000-cdrom/minimal
+
+%packages
+@^minimal-environment
+
+%end
+
+# disable annoying firstboot questions
+firstboot --disable
+
+# Partition clearing information
+ignoredisk --only-use=sda
+clearpart --all --initlabel --drives=sda
+zerombr
+
+# Disk partitioning information
+autopart
+
+# System timezone
+timezone Europe/Amsterdam --utc
+
+# Root password
+rootpw --iscrypted --allow-ssh {{ root_password | string | ansible.builtin.password_hash }}
+
+# core account
+user --name=core --groups=wheel --password={{ admin_password | string | ansible.builtin.password_hash }} --iscrypted --gecos="core admin account"
+
+# root authorized key
+sshkey --username=root '{{ root_pubkey }}'
+sshkey --username=core '{{ admin_pubkey }}'
+
+# License agreement
+eula --agreed
+
+# System timezone
+timezone Europe/Amsterdam --utc
+{% for timesource in timesources %}
+timesource --ntp-server {{ timesource }}
+{% endfor %}
+
+# Reboot after installation
+reboot
+
+%post --erroronfail
+echo "Enable verbose booting"
+sed -i 's/ rhgb quiet//' /etc/default/grub
+[ -e /boot/grub2/grub.cfg ] && sed -i 's/ rhgb quiet//' /boot/grub2/grub.cfg
+[ -e /boot/grub2/grubenv ] && sed -i 's/ rhgb quiet//' /boot/grub2/grubenv
+echo "Enable core sudo without password"
+echo "core ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/core
+chmod 0400 /etc/sudoers.d/core
+%end

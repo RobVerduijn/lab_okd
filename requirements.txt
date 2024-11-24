@@ -1,0 +1,5 @@
+ansible-core
+ansible-lint
+lxml
+libvirt-python
+passlib

@@ -14,22 +14,6 @@
       - '.*lab.home'
       - '.*okd.tjako.thuis'
       - katello
-      - tower
-      - fedora
-      - centos
-      - rhel
-      - kodi
-      - localhost
-      - ipa
-      - geel
-      - groen
-      - rood
-      - pgsql
-      - node01
-      - node02
-      - node03
-      - node04
-      - node05
 
   tasks:
     - name: Clean known hosts
