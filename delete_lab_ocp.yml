@@ -1,0 +1,44 @@
+- name: Delete the ocp lab
+  hosts: localhost
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: Ensure cluster is set
+      ansible.builtin.set_fact:
+        cluster: "{{ cluster | default('ocp_local') }}"
+
+    - name: Load vars from group {{ cluster }}
+      ansible.builtin.group_by:
+        key: "{{ cluster }}"
+
+    - name: The version of the installation
+      ansible.builtin.debug:
+        msg: We will be installing ocp release {{ ocp_release }} on cluster {{ cluster }}
+
+    - name: Warn about cluster init
+      when: init_cluster | default(false) | bool
+      ansible.builtin.pause:
+        prompt: |-
+          Deleting cluster: {{ cluster }}
+          This means all systems from this cluster will be wiped
+          And the local configuration directory deleted
+          Press enter to continue
+
+    - name: Delete vm
+      ansible.builtin.include_role:
+        name: ocp_infra
+        tasks_from: delete_vm.yml
+      loop: "{{ ocp_infra['hosts'] }}"
+      loop_control:
+        loop_var: host
+
+    - name: Delete kickstart iso
+      ansible.builtin.include_role:
+        name: ocp_infra
+        tasks_from: delete_iso.yml
+
+    - name: Delete cluster dir
+      ansible.builtin.include_role:
+        name: ocp_infra
+        tasks_from: delete_iso.yml

@@ -9,9 +9,15 @@
   ansible.builtin.command: genisoimage -output {{ ocp_infra_libvirt_storage_location }}/ks.iso -volid OEMDRV -joliet -rock /tmp/ks.cfg
   tags:
     - skip_ansible_lint
+  vars:
+    ansible_user: root
+    ansible_connection: ssh
 
 - name: Download rocky iso
   ansible.builtin.get_url:
     url: "{{ ocp_infra_rocky_iso_url }}"
     dest: "{{ ocp_infra_libvirt_storage_location }}/{{ (ocp_infra_rocky_iso_url | ansible.builtin.split('/'))[-1] }}"
     mode: "0644"
+  vars:
+    ansible_user: root
+    ansible_connection: ssh

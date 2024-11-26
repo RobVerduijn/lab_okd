@@ -2,3 +2,6 @@
   ansible.builtin.file:
     path: "{{ ocp_infra_libvirt_storage_location }}/ks.iso"
     state: absent
+  vars:
+    ansible_user: root
+    ansible_connection: ssh

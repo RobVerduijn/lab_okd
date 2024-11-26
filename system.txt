@@ -1,1 +1,2 @@
 libvirt-devel
+python3-devel

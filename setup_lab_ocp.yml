@@ -4,6 +4,11 @@
   become: false
 
   tasks:
+    - name: Check if vm's are present
+      ansible.builtin.include_role:
+        name: ocp_infra
+        tasks_from: check_vm.yml
+
     - name: Init all
       ansible.builtin.set_fact:
         init_svc: true
@@ -26,7 +31,7 @@
       when: init_cluster | default(false) | bool
       ansible.builtin.pause:
         prompt: |-
-          The cluster reinitializing cluster: {{ cluster }}
+          Reinitializing cluster: {{ cluster }}
           This means all systems from this cluster will be wiped
           And the local configuration directory deleted
           Press enter to continue
@@ -59,8 +64,18 @@
     - name: Wait for system to become reachable
       ansible.builtin.wait_for_connection:
 
-    - name: gather_facts
-      ansible.builtin.setup:
+    - name: Wipe the harddrive
+      ansible.builtin.shell: |
+        dd if=/dev/zero of=/dev/sda bs=1M count=1
+        reboot -f
+      async: 5
+      poll: 5
+      ignore_errors: true
+      tags:
+        - skip_ansible_lint
+
+    - name: Wait for system to become reachable
+      ansible.builtin.wait_for_connection:
 
 #    - name: The status of mirror installation is
 #      ansible.builtin.debug:

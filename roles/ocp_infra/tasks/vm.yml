@@ -1,0 +1,15 @@
+- name: Delete vm
+  ansible.builtin.include_tasks:
+    file: delete_vm.yml
+  loop: "{{ ocp_infra['hosts'] }}"
+  loop_control:
+    loop_var: host
+  when: host['role'] in include_roles
+
+- name: Create vm
+  ansible.builtin.include_tasks:
+    file: create_vm.yml
+  loop: "{{ ocp_infra['hosts'] }}"
+  loop_control:
+    loop_var: host
+  when: host['role'] in include_roles

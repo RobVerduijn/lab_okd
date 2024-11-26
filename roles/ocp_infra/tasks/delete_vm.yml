@@ -1,32 +1,38 @@
-- name: Get current vm list
-  community.libvirt.virt:
-    command: list_vms
-  register: current_vms
-
-- name: Delete old vm {{ host['name'] }}
-  when: host['name'] in current_vms['list_vms']
+- name: Run as root
+  vars:
+    ansible_user: root
+    ansible_connection: ssh
   block:
-    - name: Stop vm {{ host['name'] }}
+    - name: Get current vm list
       community.libvirt.virt:
-        name: "{{ host['name'] }}"
-        state: destroyed
+        command: list_vms
+      register: current_vms
 
-    - name: Delete storage {{ host['name'] }}
-      ansible.builtin.file:
-        path: "{{ ocp_infra_libvirt_storage_location }}/{{ host['name'] }}_{{ drive }}.qcow2"
-        state: absent
-      loop:
-        - sda
-        - sdb
-      loop_control:
-        loop_var: drive
+    - name: As root delete old vm {{ host['name'] }}
+      when: host['name'] in current_vms['list_vms']
+      block:
+        - name: Stop vm {{ host['name'] }}
+          community.libvirt.virt:
+            name: "{{ host['name'] }}"
+            state: destroyed
+          when: host['name'] in current_vms['list_vms']
 
-    - name: Delete efi nvram {{ host['name'] }}
-      ansible.builtin.file:
-        path: /var/lib/libvirt/qemu/nvram/{{ host['name'] }}_VARS.qcow2
-        state: absent
+        - name: Delete storage {{ host['name'] }}
+          ansible.builtin.file:
+            path: "{{ ocp_infra_libvirt_storage_location }}/{{ host['name'] }}_{{ drive }}.qcow2"
+            state: absent
+          loop:
+            - sda
+            - sdb
+          loop_control:
+            loop_var: drive
 
-    - name: Undefine vm {{ host['name'] }}
-      community.libvirt.virt:
-        name: "{{ host['name'] }}"
-        command: undefine
+        - name: Delete efi nvram {{ host['name'] }}
+          ansible.builtin.file:
+            path: /var/lib/libvirt/qemu/nvram/{{ host['name'] }}_VARS.qcow2
+            state: absent
+
+        - name: Undefine vm {{ host['name'] }}
+          community.libvirt.virt:
+            name: "{{ host['name'] }}"
+            command: undefine

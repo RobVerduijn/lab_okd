@@ -1,0 +1,17 @@
+- name: Get current vm list
+  community.libvirt.virt:
+    command: list_vms
+  register: current_vms
+  vars:
+    ansible_user: root
+    ansible_connection: ssh
+
+- name: Set the init_all if there is no svc vm
+  ansible.builtin.set_fact:
+    init_svc: "{{ ('svc' not in current_vms['list_vms']) }}"
+
+- name: Set the init_cluster if there is a node missing
+  ansible.builtin.set_fact:
+    init_cluster: >-
+      {{ (['master01', 'master02', 'master03', 'worker01', 'worker02', 'worker03'] | difference(current_vms['list_vms']) | length > 0 | bool) }}
+  when: false

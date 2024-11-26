@@ -1,0 +1,11 @@
+- name: Delete ocp directory
+  ansible.builtin.file:
+    path: "{{ lookup('ansible.builtin.env', 'HOME') }}/{{ cluster }}"
+    state: absent
+  when: init_cluster | default(false) | bool
+
+- name: Create ocp directory
+  ansible.builtin.file:
+    path: "{{ lookup('ansible.builtin.env', 'HOME') }}/{{ cluster }}"
+    mode: "0700"
+    state: directory
