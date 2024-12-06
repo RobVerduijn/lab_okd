@@ -31,37 +31,38 @@ ocp_infra:
       mac: '52:54:00:00:00:01'
       role: svc
 
-    - name: bootstrap
+    - name: lb
       mac: '52:54:00:00:00:02'
       ip: 10.0.0.2
+      role: loadbalancer
+
+    - name: bootstrap
+      mac: '52:54:00:00:00:03'
+      ip: 10.0.0.3
       role: bootstrap
 
     - name: master01
-      mac: '52:54:00:00:00:03'
-      ip: 10.0.0.3
-      role: master
-
-    - name: master02
       mac: '52:54:00:00:00:04'
       ip: 10.0.0.4
       role: master
 
-    - name: master03
+    - name: master02
       mac: '52:54:00:00:00:05'
       ip: 10.0.0.5
       role: master
 
-    - name: worker01
+    - name: master03
       mac: '52:54:00:00:00:06'
       ip: 10.0.0.6
-      role: worker
+      role: master
 
-    - name: worker02
+    - name: worker01
       mac: '52:54:00:00:00:07'
       ip: 10.0.0.7
       role: worker
 
-    - name: lb
+    - name: worker02
       mac: '52:54:00:00:00:08'
       ip: 10.0.0.8
-      role: loadbalancer
+      role: worker
+

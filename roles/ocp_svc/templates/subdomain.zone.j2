@@ -6,11 +6,12 @@ $TTL 8h
   2W ; expiry (2 weeks)
   1W ) ; minimum (1 week)
   IN NS {{ ansible_host }}.
-api IN A {{ ansible_host }}
-api-int IN A {{ ansible_host }}
-*.apps IN A {{ ansible_host }}
+{% set loadbalancer_ip = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'loadbalancer') | map(attribute='ip'))[0] %}
+api.okd IN A {{ loadbalancer_ip }}
+api-int.okd IN A {{ loadbalancer_ip }}
+*.apps.okd IN A {{ loadbalancer_ip }}
 {% for host in ocp_infra['hosts'] %}
-{%   if host['role'] == 'svc' %}
+{%   if host['role'] in ['svc','loadbalancer'] %}
 {{ host['name'] }} IN A {{ host['ip'] }}
 {%   else %}
 {{ host['name'] }}.okd IN A {{ host['ip'] }}

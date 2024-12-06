@@ -54,7 +54,7 @@
     enabled: true
     state: started
 
-- name: Open firewall port
+- name: Open firewall for dns
   ansible.posix.firewalld:
     service: dns
     state: enabled

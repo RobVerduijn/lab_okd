@@ -6,10 +6,11 @@ $TTL 8h
   2W ; expiry (2 weeks)
   1W ) ; minimum (1 week)
   IN NS {{ ansible_host }}.
-{{ (ansible_host | split('.'))[3] }} IN PTR api.okd.{{ ocp_infra_network['domain'] }}. 
-{{ (ansible_host | split('.'))[3] }} IN PTR api-int.okd.{{ ocp_infra_network['domain'] }}. 
+{% set loadbalancer_ip = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'loadbalancer') | map(attribute='ip'))[0] %}
+{{ (loadbalancer_ip | split('.'))[3] }} IN PTR api.okd.{{ ocp_infra_network['domain'] }}. 
+{{ (loadbalancer_ip | split('.'))[3] }} IN PTR api-int.okd.{{ ocp_infra_network['domain'] }}. 
 {% for host in ocp_infra['hosts'] %}
-{%   if host['role'] == 'svc' %}
+{%   if host['role'] in ['svc','loadbalancer'] %}
 {{ (host['ip'] | split('.'))[3] }} IN PTR {{ host['name'] }}.{{ ocp_infra_network['domain'] }}. 
 {%   else %}
 {{ (host['ip'] | split('.'))[3] }} IN PTR {{ host['name'] }}.okd.{{ ocp_infra_network['domain'] }}. 

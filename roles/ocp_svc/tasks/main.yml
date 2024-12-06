@@ -13,19 +13,3 @@
 - name: Setup http
   ansible.builtin.include_tasks:
     file: http.yml
-
-- name: Setup loadbalancer
-  ansible.builtin.include_tasks:
-    file: loadbalancer.yml
-
-- name: Install the packages that I like
-  ansible.builtin.dnf:
-    name: "{{ ocp_svc_my_prefered_packages }}"
-    state: present
-  when: "ocp_svc_my_prefered_packages | difference(ansible_facts['packages']) | length > 0"
-
-- name: Update the system
-  ansible.builtin.dnf:
-    name: "*"
-    state: latest
-    update_only: true

@@ -1,0 +1,6 @@
+my_preferred_packages:
+  - bash-completion
+  - mlocate
+  - vim
+  - yum-utils
+  

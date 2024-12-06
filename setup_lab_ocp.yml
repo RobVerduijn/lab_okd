@@ -44,13 +44,36 @@
     - name: Clean up the lab
       ansible.builtin.include_role:
         name: lab
-      when: (init_svc | default(false) | bool) or (init_lb | default(false) | bool)
+      when: (init_svc | default(false) | bool) or (init_lb | default(false) | bool) or (init_cluster | default(false) | bool)
 
     - name: Create vm's
       ansible.builtin.include_role:
         name: ocp_infra
 
 - name: Configure svc host
+  hosts: svc
+  gather_facts: false
+  become: false
+  remote_user: root
+
+  tasks:
+    - name: Start svc vm
+      community.libvirt.virt:
+        name: "svc"
+        state: running
+      delegate_to: localhost
+
+    - name: Wait for system to become reachable
+      ansible.builtin.wait_for_connection:
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+    - name: Setup the services on the svc vm
+      ansible.builtin.include_role:
+        name: ocp_svc
+
+- name: Configure loadbalancer host
   hosts: loadbalancer
   gather_facts: false
   become: false
@@ -70,12 +93,49 @@
     - name: Wait for system to become reachable
       ansible.builtin.wait_for_connection:
 
-    - name: Gather facts
-      ansible.builtin.setup:
+    - name: Ensure cluster is set
+      ansible.builtin.set_fact:
+        cluster: "{{ cluster | default('ocp_local') }}"
 
-    - name: Setup the services on the svc vm
+    - name: Load vars from group {{ cluster }}
+      ansible.builtin.group_by:
+        key: "{{ cluster }}"
+
+    - name: Setup loadbalancer
       ansible.builtin.include_role:
-        name: ocp_svc
+        name: ocp_lb
+
+- name: Apply personal preferences
+  hosts: loadbalancer,svc
+  gather_facts: false
+  become: false
+  remote_user: root
+
+  tasks:
+    - name: Ensure the package facts are loaded
+      ansible.builtin.package_facts:
+      when: ansible_facts['packages'] is not defined
+
+    - name: Install the packages that I like
+      ansible.builtin.dnf:
+        name: "{{ my_preferred_packages }}"
+        state: present
+      when: "my_preferred_packages | difference(ansible_facts['packages']) | length > 0"
+
+    - name: Update systems
+      ansible.builtin.dnf:
+        name: "{{ my_preferred_packages }}"
+        state: present
+
+    - name: Check if system needs restarting
+      ansible.builtin.command: needs-restarting -r
+      register: needs_restarting
+      changed_when: false | bool
+      failed_when: needs_restarting['rc'] > 1
+
+    - name: Restart machine {{ inventory_hostname }}
+      ansible.builtin.reboot:
+      when: needs_restarting['rc'] | default(0) == 1
 
 #    - name: The status of mirror installation is
 #      ansible.builtin.debug:

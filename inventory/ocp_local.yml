@@ -3,10 +3,16 @@ all:
   hosts:
     svc.ocp.lab:
       ansible_host: 10.0.0.1
+    lb.ocp.lab:
+      ansible_host: 10.0.0.2
   children:
     ocp_local:
+      hosts:
+        lb.ocp.lab:
+        svc.ocp.lab:
+    svc:
       hosts:
         svc.ocp.lab:
     loadbalancer:
       hosts:
-        svc.ocp.lab:
+        lb.ocp.lab:

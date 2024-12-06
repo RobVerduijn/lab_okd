@@ -26,7 +26,7 @@
   notify:
     - Reload firewalld
 
-- name: Open firewall port
+- name: Open firewall for dhcp
   ansible.posix.firewalld:
     service: dhcp
     state: enabled

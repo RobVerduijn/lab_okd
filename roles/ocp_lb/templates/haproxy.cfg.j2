@@ -40,8 +40,9 @@ defaults
 #---------------------------------------------------------------------
 # round robin balancing for RHOCP Kubernetes API Server
 #---------------------------------------------------------------------
+{% set ip = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'loadbalancer') | map(attribute='ip'))[0] %}
 frontend k8s_api
-    bind {{ ansible_eth0['ipv4']['address'] }}:6443
+    bind {{ ip }}:6443
     mode tcp
     default_backend k8s_api_backend
 
@@ -49,10 +50,16 @@ backend k8s_api_backend
     balance roundrobin
     mode tcp
 {% if enable_bootstrap | bool %}
-    server {{ bootstrap['name'] }} {{ bootstrap['ip'] }}:6443 check
+{%   for host in ocp_infra['hosts'] %}
+{%     if host['role'] == 'bootstrap' %}
+    server {{ host['name'] }} {{ host['ip'] }}:6443 check
+{%     endif %}
+{%   endfor %}
 {% endif %}
-{% for server in k8s_api_backend %}
-    server {{ server['name'] }} {{ server['ip'] }}:6443 check
+{% for host in ocp_infra['hosts'] %}
+{%   if host['role'] == 'master' %}
+    server {{ host['name'] }} {{ host['ip'] }}:6443 check
+{%   endif %}
 {% endfor %}
 
 # ---------------------------------------------------------------------
@@ -60,7 +67,7 @@ backend k8s_api_backend
 # ---------------------------------------------------------------------
 
 frontend machine_config
-    bind {{ ansible_eth0['ipv4']['address'] }}:22623
+    bind {{ ip }}:22623
     mode tcp
     default_backend machine_config_backend
 
@@ -68,42 +75,52 @@ backend machine_config_backend
     balance roundrobin
     mode tcp
 {% if enable_bootstrap | bool %}
-    server {{ bootstrap['name'] }} {{ bootstrap['ip'] }}:22623 check
+{%   for host in ocp_infra['hosts'] %}
+{%     if host['role'] == 'bootstrap' %}
+    server {{ host['name'] }} {{ host['ip'] }}:22623 check
+{%     endif %}
+{%   endfor %}
 {% endif %}
-{% for server in machine_config_backend %}
-    server {{ server['name'] }} {{ server['ip'] }}:22623 check
-{% endfor %}
-
-# ---------------------------------------------------------------------
-# round robin balancing for RHOCP Ingress Insecure Port
-# ---------------------------------------------------------------------
-
-frontend tlsrouter
-    bind {{ ansible_eth0['ipv4']['address'] }}:443
-    mode tcp
-    default_backend ingress_secure_backend
-
-backend ingress_secure_backend
-    balance roundrobin
-    mode tcp
-{% for server in ingress_secure_backend %}
-    server {{ server['name'] }} {{ server['ip'] }}:443 check
+{% for host in ocp_infra['hosts'] %}
+{%   if host['role'] == 'master' %}
+    server {{ host['name'] }} {{ host['ip'] }}:22623 check
+{%   endif %}
 {% endfor %}
 
 # ---------------------------------------------------------------------
 # round robin balancing for RHOCP Ingress Secure Port
 # ---------------------------------------------------------------------
 
+frontend tlsrouter
+    bind {{ ip }}:443
+    mode tcp
+    default_backend ingress_secure_backend
+
+backend ingress_secure_backend
+    balance roundrobin
+    mode tcp
+{% for host in ocp_infra['hosts'] %}
+{%   if host['role'] in ['master','worker'] %}
+    server {{ host['name'] }} {{ host['ip'] }}:443 check
+{%   endif %}
+{% endfor %}
+
+# ---------------------------------------------------------------------
+# round robin balancing for RHOCP Ingress Insecure Port
+# ---------------------------------------------------------------------
+
 frontend ingress_insecure
-    bind {{ ansible_eth0['ipv4']['address'] }}:80
+    bind {{ ip }}:80
     mode tcp
     default_backend ingress_insecure_backend
 
 backend ingress_insecure_backend
     balance roundrobin
     mode tcp
-{% for server in ingress_insecure_backend %}
-    server {{ server['name'] }} {{ server['ip'] }}:80 check
+{% for host in ocp_infra['hosts'] %}
+{%   if host['role'] in ['master','worker'] %}
+    server {{ host['name'] }} {{ host['ip'] }}:80 check
+{%   endif %}
 {% endfor %}
 
 # ---------------------------------------------------------------------
@@ -114,5 +131,3 @@ listen stats
     stats enable
     stats uri /
     stats refresh 10s
-#    stats hide-version
-#    stats auth admin:redhat

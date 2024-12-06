@@ -1,0 +1,3 @@
+ocp_lb_packages:
+  - haproxy
+  - python3-policycoreutils

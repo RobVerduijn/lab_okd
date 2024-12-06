@@ -21,8 +21,3 @@
   ansible.builtin.systemd_service:
     name: firewalld
     state: reloaded
-
-- name: Restart haproxy
-  ansible.builtin.systemd_service:
-    service: haproxy
-    state: restarted
