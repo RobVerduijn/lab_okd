@@ -1,0 +1,71 @@
+- name: Ensure the package facts are loaded
+  ansible.builtin.package_facts:
+  when: ansible_facts['packages'] is not defined
+
+- name: Install tftp packages
+  ansible.builtin.package:
+    name:
+      - syslinux
+      - tftp-server
+    state: present
+  when: "['syslinux','tftp-server'] | ansible.builtin.difference(ansible_facts['packages'].keys()) | length > 0"
+
+- name: Install custom unitfile
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/tftp.service
+    content: |-
+      [Unit]
+      Description=Tftp Server
+      Requires=tftp.socket
+      Documentation=man:in.tftpd
+
+      [Service]
+      # extra verbose logging
+      ExecStart=/usr/sbin/in.tftpd -vvv -s /var/lib/tftpboot
+      StandardInput=socket
+
+      [Install]
+      Also=tftp.socket
+    mode: "0644"
+  notify:
+    - Reload systemd
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Create directories
+  ansible.builtin.file:
+    path: "{{ filepath }}"
+    state: directory
+    mode: "0755"
+    setype: tftpdir_rw_t
+  loop:
+    - /var/lib/tftpboot/uefi
+    - /var/lib/tftpboot/bios/pxelinux.cfg
+  loop_control:
+    loop_var: filepath
+
+- name: Copy files to pxe dir
+  ansible.builtin.copy:
+    remote_src: true
+    src: "{{ path['src'] }}"
+    dest: "{{ path['dest'] }}"
+    mode: "0644"
+    setype: tftpdir_rw_t
+  loop:
+    - src: "/boot/efi/EFI/rocky/shimx64.efi"
+      dest: /var/lib/tftpboot/uefi/shimx64.efi
+    - src: "/boot/efi/EFI/rocky/grubx64.efi"
+      dest: /var/lib/tftpboot/uefi/grubx64.efi
+    - src: /usr/share/syslinux/pxelinux.0
+      dest: /var/lib/tftpboot/bios/pxelinux.0
+    - src: /usr/share/syslinux/vesamenu.c32
+      dest: /var/lib/tftpboot/bios/vesamenu.c32
+    - src: /usr/share/syslinux/libcom32.c32
+      dest: /var/lib/tftpboot/bios/libcom32.c32
+    - src: /usr/share/syslinux/libutil.c32
+      dest: /var/lib/tftpboot/bios/libutil.c32
+    - src: /usr/share/syslinux/ldlinux.c32
+      dest: /var/lib/tftpboot/bios/ldlinux.c32
+  loop_control:
+    loop_var: path

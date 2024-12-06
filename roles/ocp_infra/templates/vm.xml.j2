@@ -61,7 +61,7 @@
     </disk>
 {%  endif %}
 {% endfor %}
-{% if host['role'] == 'svc' %}
+{% if host['role'] in ['svc','loadbalancer'] %}
     <disk type="file" device="cdrom">
       <driver name="qemu" type="raw"/>
       <source file="{{ ocp_infra_libvirt_storage_location }}/{{ (ocp_infra_rocky_iso_url | ansible.builtin.split('/'))[-1] }}"/>
@@ -71,7 +71,7 @@
     </disk>
     <disk type="file" device="cdrom">
       <driver name="qemu" type="raw"/>
-      <source file="{{ ocp_infra_libvirt_storage_location }}/ks.iso"/>
+      <source file="{{ ocp_infra_libvirt_storage_location }}/{{ host['name'] }}-ks.iso"/>
       <target dev="sdd" bus="scsi"/>
       <readonly/>
     </disk>

@@ -1,0 +1,17 @@
+$TTL 8h
+@ IN SOA {{ inventory_hostname }}. root.{{ inventory_hostname }}. (
+  {{ zone_serial }} ; serial
+  3H ; refresh (3 hours)
+  30M ; retry (30 minutes)
+  2W ; expiry (2 weeks)
+  1W ) ; minimum (1 week)
+  IN NS {{ ansible_host }}.
+{{ (ansible_host | split('.'))[3] }} IN PTR api.okd.{{ ocp_infra_network['domain'] }}. 
+{{ (ansible_host | split('.'))[3] }} IN PTR api-int.okd.{{ ocp_infra_network['domain'] }}. 
+{% for host in ocp_infra['hosts'] %}
+{%   if host['role'] == 'svc' %}
+{{ (host['ip'] | split('.'))[3] }} IN PTR {{ host['name'] }}.{{ ocp_infra_network['domain'] }}. 
+{%   else %}
+{{ (host['ip'] | split('.'))[3] }} IN PTR {{ host['name'] }}.okd.{{ ocp_infra_network['domain'] }}. 
+{%   endif %}
+{% endfor %}

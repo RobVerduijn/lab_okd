@@ -8,16 +8,23 @@
       ansible.builtin.set_fact:
         cluster: "{{ cluster | default('ocp_local') }}"
 
+    - name: Set all init to true
+      ansible.builtin.set_fact:
+        init_svc: true
+        init_lb: true
+        init_cluster: true
+
     - name: Load vars from group {{ cluster }}
       ansible.builtin.group_by:
         key: "{{ cluster }}"
 
-    - name: The version of the installation
-      ansible.builtin.debug:
-        msg: We will be installing ocp release {{ ocp_release }} on cluster {{ cluster }}
+    - name: Ensure all vm's are included
+      ansible.builtin.include_role:
+        name: ocp_infra
+        tasks_from: run.yml
 
-    - name: Warn about cluster init
-      when: init_cluster | default(false) | bool
+    - name: Warn about cluster delete
+      when: init_cluster | default(true) | bool
       ansible.builtin.pause:
         prompt: |-
           Deleting cluster: {{ cluster }}
@@ -33,12 +40,15 @@
       loop_control:
         loop_var: host
 
-    - name: Delete kickstart iso
+    - name: Delete iso
       ansible.builtin.include_role:
         name: ocp_infra
         tasks_from: delete_iso.yml
+      loop: "{{ ocp_infra['hosts'] }}"
+      loop_control:
+        loop_var: host
 
     - name: Delete cluster dir
       ansible.builtin.include_role:
         name: ocp_infra
-        tasks_from: delete_iso.yml
+        tasks_from: dir.yml

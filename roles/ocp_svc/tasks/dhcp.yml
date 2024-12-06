@@ -1,0 +1,35 @@
+- name: Ensure the package facts are loaded
+  ansible.builtin.package_facts:
+  when: ansible_facts['packages'] is not defined
+
+- name: Install dhcpd packages
+  ansible.builtin.dnf:
+    name: dhcp-server
+    state: present
+  when: "'dhcp-server' not in ansible_facts['packages'].keys()"
+
+- name: Copy dhcpd conf
+  ansible.builtin.template:
+    dest: /etc/dhcp/dhcpd.conf
+    src: dhcpd.conf.j2
+    group: root
+    owner: root
+    mode: '0640'
+  notify:
+    - Restart dhcpd
+
+- name: Enable dhcpd service
+  ansible.builtin.systemd_service:
+    name: dhcpd
+    enabled: true
+    state: started
+  notify:
+    - Reload firewalld
+
+- name: Open firewall port
+  ansible.posix.firewalld:
+    service: dhcp
+    state: enabled
+    permanent: true
+    immediate: true
+    offline: true

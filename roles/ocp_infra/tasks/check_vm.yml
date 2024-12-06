@@ -4,14 +4,17 @@
   register: current_vms
   vars:
     ansible_user: root
-    ansible_connection: ssh
+#    ansible_connection: ssh
 
-- name: Set the init_all if there is no svc vm
+- name: Set the init_svc if there is no svc vm
   ansible.builtin.set_fact:
     init_svc: "{{ ('svc' not in current_vms['list_vms']) }}"
+
+- name: Set the init_lb if there is no lb vm
+  ansible.builtin.set_fact:
+    init_lb: "{{ ('lb' not in current_vms['list_vms']) }}"
 
 - name: Set the init_cluster if there is a node missing
   ansible.builtin.set_fact:
     init_cluster: >-
-      {{ (['master01', 'master02', 'master03', 'worker01', 'worker02', 'worker03'] | difference(current_vms['list_vms']) | length > 0 | bool) }}
-  when: false
+      {{ (['master01', 'master02', 'master03', 'worker01', 'worker02', 'bootstrap'] | difference(current_vms['list_vms']) | length > 0 | bool) }}

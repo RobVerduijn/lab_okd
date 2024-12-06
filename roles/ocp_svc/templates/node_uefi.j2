@@ -1,0 +1,38 @@
+{#- static ip bootparams are to ensure the host configures with a static ip and not dhcpd -#}
+{#- see https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/boot_options_for_rhel_installer/kickstart-and-advanced-boot-options_boot-options-for-rhel-installer#installation-source-boot-options_kickstart-and-advanced-boot-options -#}
+{#- https://linuxlink.timesys.com/docs/static_ip -#}
+
+
+{% set ip = host['ip'] %}
+{% set gw = ocp_infra_network['gateway'] %}
+{% set nm = ocp_infra_network['netmask'] %}
+{% set dns = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'svc') | map(attribute='ip'))[0] %}
+{% set web = dns %}
+{% set name = host['name'] %}
+{% set domain = ocp_infra_network['domain'] %}
+{% set dev = ocp_svc_network_device %}
+# {{ host['role'] }} {{ host['name'] }}
+function load_video {
+insmod efi_gop
+insmod efi_uga
+insmod video_bochs
+insmod video_cirrus
+insmod all_video
+}
+
+load_video
+set gfxpayload=keep
+insmod gzio
+set timeout=10
+
+set default=scos
+
+menuentry 'scos' --class fedora --class gnu-linux --class gnu --class os {
+echo "Loading CoreOS on {{ host['name'] }}"
+linuxefi boot/scos-live-kernel-x86_64.img ip={{ ip }}::{{ gw }}:{{ nm }}:{{ name }}.okd.{{ domain }}:{{ dev }}:none {# -#}
+    nameserver={{ dns }} {# -#}
+    coreos.live.rootfs_url=http://{{ web }}/scos-live-rootfs.x86_64.img {# -#}
+    coreos.inst.install_dev=/dev/sda {# -#}
+    coreos.inst.ignition_url=http://{{ web }}/{{ host['role'] }}.ign
+initrdefi boot/scos-live-initramfs-x86_64.img
+}

@@ -1,0 +1,32 @@
+# pxe config mainly based on instructions from
+# https://docs.fedoraproject.org/en-US/fedora/f36/install-guide/advanced/Network_based_Installations/
+# and some from
+# https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/automatically_installing_rhel/preparing-for-a-network-install_rhel-installer#configuring-the-dhcpv6-server-for-http-and-pxe-boot_preparing-for-a-network-install
+# https://linuxguideandhints.com/el/pxeboot/#tftp for instructions on tftp
+
+- name: Include tftp_structure_and_files.yml
+  ansible.builtin.include_tasks:
+    file: tftp_dirs_and_files.yml
+
+- name: Ensure tftp.socket is enabled and started
+  ansible.builtin.systemd_service:
+    name: tftp.socket
+    state: started
+    enabled: true
+
+- name: Open firewall port
+  ansible.posix.firewalld:
+    service: tftp
+    state: enabled
+    permanent: true
+    immediate: true
+    offline: true
+  notify:
+    - Reload firewalld
+
+- name: Deploy pxe config files for host
+  ansible.builtin.include_tasks:
+    file: pxe_config_host.yml
+  loop: "{{ ocp_infra['hosts'] }}"
+  loop_control:
+    loop_var: host

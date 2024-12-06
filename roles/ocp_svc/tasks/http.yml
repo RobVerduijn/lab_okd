@@ -1,0 +1,53 @@
+- name: Ensure the package facts are loaded
+  ansible.builtin.package_facts:
+  when: ansible_facts['packages'] is not defined
+
+- name: Install httpd package
+  ansible.builtin.dnf:
+    name: httpd
+    state: present
+  when: "'httpd' not in ansible_facts['packages'].keys()"
+
+- name: Start and enable httpd service
+  ansible.builtin.systemd_service:
+    name: httpd
+    enabled: true
+    state: started
+
+- name: Remove welcome Page
+  ansible.builtin.copy:
+    src: welcome.conf
+    dest: /etc/httpd/conf.d/welcome.conf
+    mode: "0644"
+  notify:
+    - Restart httpd
+
+- name: Create a custom index.html file
+  ansible.builtin.copy:
+    dest: /var/www/html/index.html
+    content: |
+      Enable SysAdmin Demo:
+      Ansible Profiling with Callback Plugin
+      Custom Web Page
+    mode: "0644"
+  when: false
+
+- name: Open firewall port
+  ansible.posix.firewalld:
+    service: http
+    state: enabled
+    permanent: true
+    immediate: true
+    offline: true
+  notify:
+    - Reload firewalld
+
+- name: Open firewall port
+  ansible.posix.firewalld:
+    service: https
+    state: enabled
+    permanent: true
+    immediate: true
+    offline: true
+  notify:
+    - Reload firewalld

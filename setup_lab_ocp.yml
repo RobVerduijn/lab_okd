@@ -12,6 +12,7 @@
     - name: Init all
       ansible.builtin.set_fact:
         init_svc: true
+        init_lb: true
         init_cluster: true
       when: init_all | default('false') | bool
 
@@ -27,6 +28,10 @@
       ansible.builtin.debug:
         msg: We will be installing ocp release {{ ocp_release }} on cluster {{ cluster }}
 
+    - name: Ensure init cluster is set
+      ansible.builtin.set_fact:
+        init_cluster: "{{ init_cluster | default(false) }}"
+
     - name: Warn about cluster init
       when: init_cluster | default(false) | bool
       ansible.builtin.pause:
@@ -36,17 +41,14 @@
           And the local configuration directory deleted
           Press enter to continue
 
-    - name: Configure services
+    - name: Clean up the lab
       ansible.builtin.include_role:
-        name: ocp_infra
-      when: init_svc | default(false) | bool
-      vars:
-        ocp_infra_init_svc: true
+        name: lab
+      when: (init_svc | default(false) | bool) or (init_lb | default(false) | bool)
 
     - name: Create vm's
       ansible.builtin.include_role:
         name: ocp_infra
-      when: init_cluster | default(false) | bool
 
 - name: Configure svc host
   hosts: loadbalancer
@@ -55,6 +57,10 @@
   remote_user: root
 
   tasks:
+    - name: Ensure enable bootstrap is set
+      ansible.builtin.set_fact:
+        enable_bootstrap: "{{ hostvars['localhost']['init_cluster'] | default(false) }}"
+
     - name: Start svc vm
       community.libvirt.virt:
         name: "svc"
@@ -64,18 +70,12 @@
     - name: Wait for system to become reachable
       ansible.builtin.wait_for_connection:
 
-    - name: Wipe the harddrive
-      ansible.builtin.shell: |
-        dd if=/dev/zero of=/dev/sda bs=1M count=1
-        reboot -f
-      async: 5
-      poll: 5
-      ignore_errors: true
-      tags:
-        - skip_ansible_lint
+    - name: Gather facts
+      ansible.builtin.setup:
 
-    - name: Wait for system to become reachable
-      ansible.builtin.wait_for_connection:
+    - name: Setup the services on the svc vm
+      ansible.builtin.include_role:
+        name: ocp_svc
 
 #    - name: The status of mirror installation is
 #      ansible.builtin.debug:

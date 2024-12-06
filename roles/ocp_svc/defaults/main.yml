@@ -1,0 +1,8 @@
+ocp_svc_network_device: enp1s0
+ocp_svc_loadbalancer_packages:
+  - haproxy
+  - python3-policycoreutils
+ocp_svc_my_prefered_packages:
+  - vim
+  - mlocate
+  - bash-completion

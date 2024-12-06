@@ -2,8 +2,7 @@
 all:
   hosts:
     svc.ocp.lab:
-      ansible_host: 10.0.0.2
-      ansible_interpreter: /usr/bin/python3.9
+      ansible_host: 10.0.0.1
   children:
     ocp_local:
       hosts:

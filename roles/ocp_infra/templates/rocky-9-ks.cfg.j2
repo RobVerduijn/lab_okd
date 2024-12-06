@@ -1,11 +1,10 @@
 {#- see https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/automatically_installing_rhel/kickstart-commands-and-options-reference_rhel-installer -#}
-{% set hostname = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'svc') | map(attribute='name'))[0] %}
+{% set hostname = host['name'] %}
 {% set gw = ocp_infra_network['gateway'] %}
-{% set ip = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'svc') | map(attribute='ip'))[0] %}
+{% set ip = host['ip'] %}
 {% set nm = ocp_infra_network['netmask'] %}
-{% set dns = ocp_infra_network['nameservers'] %}{# comma separated list of ip's #}
+{% set dns = ocp_infra_network['gateway'] %}{# comma separated list of ip's, using gateway as dns because there is no local dns yet#}
 {% set domain = ocp_infra_network['domain'] %}
-{% set webserver = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'svc') | map(attribute='ip'))[0] %}
 {% set timesources = ocp_infra_network['timesources'] %}
 {% set root_password = ocp_infra_root_password %}
 {% set admin_password = ocp_infra_admin_password %}

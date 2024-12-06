@@ -1,9 +1,9 @@
 # check libvirt network config here
 # uuid must be same or else libvirt thinks it already exists
-<network connections="1">
-  <name>lab_ocp</name>
-  <forward mode="route"/>
-  <bridge name="virbr1" stp="on" delay="0"/>
-  <domain name="ocp.lab"/>
-  <ip address="10.0.0.254" netmask="255.255.255.0"/>
-</network>
+# <network connections="1">
+#   <name>lab_ocp</name>
+#   <forward mode="nat"/>
+#   <bridge name="virbr1" stp="on" delay="0"/>
+#   <domain name="ocp.lab"/>
+#   <ip address="10.0.0.254" netmask="255.255.255.0"/>
+# </network>

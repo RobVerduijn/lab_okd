@@ -1,7 +1,7 @@
 - name: Run all these commands as root
   vars:
     ansible_user: root
-    ansible_connection: ssh
+#    ansible_connection: ssh
   block:
     - name: Create qcow2 image {{ host['name'] }}
       ansible.builtin.command: >-
@@ -26,4 +26,4 @@
       community.libvirt.virt:
         name: "{{ host['name'] }}"
         state: running
-      when: host['role'] == 'svc'
+      when: host['role'] in ['svc','loadbalancer']

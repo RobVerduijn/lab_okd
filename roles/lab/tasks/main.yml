@@ -1,0 +1,6 @@
+- name: Clean known hosts
+  ansible.builtin.lineinfile:
+    path: /home/rob/.ssh/known_hosts
+    state: absent
+    regexp: "^{{ item }}.*"
+  loop: "{{ lab_clean_hosts_lines }}"

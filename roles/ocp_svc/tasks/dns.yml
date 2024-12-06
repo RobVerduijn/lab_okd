@@ -1,0 +1,73 @@
+- name: Ensure the package facts are loaded
+  ansible.builtin.package_facts:
+  when: ansible_facts['packages'] is not defined
+
+- name: Ensure the bind and bind-utils are installed
+  ansible.builtin.dnf:
+    name:
+      - bind
+      - bind-utils
+    state: present
+  when: "['bind','bind-utils'] | difference(ansible_facts['packages']) | length > 0"
+
+- name: Set named.conf"
+  ansible.builtin.template:
+    src: named.conf.j2
+    dest: /etc/named.conf
+    owner: root
+    group: named
+    mode: "0640"
+    setype: named_conf_t
+  notify:
+    - Restart named
+
+- name: Set serial
+  ansible.builtin.set_fact:
+    zone_serial: "{{ ansible_date_time['epoch'] }}"
+  changed_when: false
+
+- name: Create zonefile
+  ansible.builtin.template:
+    src: subdomain.zone.j2
+    dest: /var/named/{{ ocp_infra_network['domain'] }}.zone
+    owner: root
+    group: named
+    mode: "0640"
+    setype: named_zone_t
+  notify:
+    - Restart named
+
+- name: Create rr zone
+  ansible.builtin.template:
+    src: rr.zone.j2
+    dest: /var/named/{{ (ansible_host | ansible.builtin.split('.'))[:3] | reverse | join('.') }}.in-addr.arpa.zone
+    owner: root
+    group: named
+    mode: "0640"
+    setype: named_zone_t
+  notify:
+    - Restart named
+
+- name: Ensure Named is enabled and started
+  ansible.builtin.systemd_service:
+    name: named
+    enabled: true
+    state: started
+
+- name: Open firewall port
+  ansible.posix.firewalld:
+    service: dns
+    state: enabled
+    permanent: true
+    immediate: true
+    offline: true
+  notify:
+    - Reload firewalld
+
+- name: Ensure we use our own bind server
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      search ocp.lab okd.ocp.lab
+      nameserver 10.0.0.1
+    mode: "0644"

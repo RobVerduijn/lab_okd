@@ -1,7 +1,7 @@
 - name: Run as root
   vars:
     ansible_user: root
-    ansible_connection: ssh
+#    ansible_connection: ssh
   block:
     - name: Get current vm list
       community.libvirt.virt:

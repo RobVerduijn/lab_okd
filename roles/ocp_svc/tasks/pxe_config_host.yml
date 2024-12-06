@@ -1,0 +1,15 @@
+- name: Deploy cluster Nodes config files
+  when: host['role'] in ['bootstrap','master','worker']
+  block:
+    - name: "Ensure pxe config role:{{ host['role'] + ' host:' + host['name'] }}"
+      ansible.builtin.template:
+        src: "{{ file['src'] }}"
+        dest: "{{ file['dest'] }}"
+        mode: "0644"
+      loop:
+        - src: node_uefi.j2
+          dest: /var/lib/tftpboot/uefi/grub.cfg-01-{{ host['mac'] | replace(':', '-') }}
+        - src: node_bios.j2
+          dest: /var/lib/tftpboot/bios/pxelinux.cfg/01-{{ host['mac'] | replace(':', '-') }}
+      loop_control:
+        loop_var: file

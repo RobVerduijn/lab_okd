@@ -8,13 +8,16 @@ ocp_webserver_coreos_path: /network/repo/scos
 ocp_infra_libvirt_network:
   type: network
   source: lab_ocp
-
+ocp_svc:
+  dns_forwarders:
+    - 10.0.0.254
 ocp_infra_network:
   gateway: 10.0.0.254
   network: 10.0.0.0
   netmask: 255.255.255.0
   nameservers: 10.0.0.1
   domain: ocp.lab
+  broadcast: 10.0.0.255
   timesources:
     - 0.nl.pool.ntp.org
     - 1.nl.pool.ntp.org
@@ -24,30 +27,41 @@ ocp_infra_network:
 ocp_infra:
   hosts:
     - name: svc
-      ip: 10.0.0.2
+      ip: 10.0.0.1
       mac: '52:54:00:00:00:01'
       role: svc
+
     - name: bootstrap
       mac: '52:54:00:00:00:02'
-      ip: 10.0.0.3
+      ip: 10.0.0.2
       role: bootstrap
+
     - name: master01
       mac: '52:54:00:00:00:03'
-      ip: 10.0.0.4
+      ip: 10.0.0.3
       role: master
+
     - name: master02
       mac: '52:54:00:00:00:04'
-      ip: 10.0.0.5
+      ip: 10.0.0.4
       role: master
+
     - name: master03
       mac: '52:54:00:00:00:05'
-      ip: 10.0.0.6
+      ip: 10.0.0.5
       role: master
+
     - name: worker01
       mac: '52:54:00:00:00:06'
-      ip: 10.0.0.7
+      ip: 10.0.0.6
       role: worker
+
     - name: worker02
       mac: '52:54:00:00:00:07'
-      ip: 10.0.0.8
+      ip: 10.0.0.7
       role: worker
+
+    - name: lb
+      mac: '52:54:00:00:00:08'
+      ip: 10.0.0.8
+      role: loadbalancer
