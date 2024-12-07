@@ -18,12 +18,12 @@ ocp_infra_role:
   bootstrap:
     ram: 8
     ramunit: GiB
-    vcpu: 2
+    vcpu: 4
     sda: 100
   master:
-    ram: 8
+    ram: 10
     ramunit: GiB
-    vcpu: 2
+    vcpu: 4
     sda: 100
   worker:
     ram: 8

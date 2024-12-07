@@ -28,7 +28,7 @@
     enabled: true
     state: started
 
-- name: Open firewall ports
+- name: Open firewall port for api
   ansible.posix.firewalld:
     port: 6443/tcp
     state: enabled
@@ -36,9 +36,17 @@
     immediate: true
     offline: true
 
-- name: Open firewall ports
+- name: Open firewall port for machineconfig
   ansible.posix.firewalld:
     port: 22623/tcp
+    state: enabled
+    permanent: true
+    immediate: true
+    offline: true
+
+- name: Open firewall port for haproxy stats
+  ansible.posix.firewalld:
+    port: 32700/tcp
     state: enabled
     permanent: true
     immediate: true
