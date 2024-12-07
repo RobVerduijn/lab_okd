@@ -1,0 +1,7 @@
+- name: Setup ocp dir
+  ansible.builtin.include_tasks:
+    file: dir.yml
+
+- name: Download binaries
+  ansible.builtin.include_tasks:
+    file: binaries.yml

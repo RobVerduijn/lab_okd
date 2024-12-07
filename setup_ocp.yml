@@ -1,0 +1,71 @@
+- name: Setup ocp configuration
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: false
+
+  tasks:
+    - name: Ensure cluster is set
+      ansible.builtin.set_fact:
+        cluster: "{{ cluster | default('ocp_local') }}"
+
+    - name: Ensure init cluster is set
+      ansible.builtin.set_fact:
+        init_cluster: "{{ init_cluster | default(false) }}"
+
+    - name: Load vars from group {{ cluster }}
+      ansible.builtin.group_by:
+        key: "{{ cluster }}"
+
+    - name: The version of the installation
+      ansible.builtin.debug:
+        msg: We will be installing ocp release {{ ocp_release }} on cluster {{ cluster }}
+
+    - name: Warn about cluster init
+      when: init_cluster | default(false) | bool
+      ansible.builtin.pause:
+        prompt: |-
+          Reinitializing cluster: {{ cluster }}
+          This means all systems from this cluster will be wiped
+          And the local configuration directory deleted
+          Press enter to continue
+
+    - name: Setup ocp binaries
+      ansible.builtin.include_role:
+        name: ocp_binaries
+
+    - name: Prepare the ocp installation
+      ansible.builtin.include_role:
+        name: ocp_ignition
+
+- name: Download pxe binaries to svc
+  hosts: svc
+  gather_facts: false
+  become: false
+  remote_user: root
+
+  tasks:
+    - name: Start svc vm
+      community.libvirt.virt:
+        name: "svc"
+        state: running
+      delegate_to: localhost
+
+    - name: Ensure cluster is set
+      ansible.builtin.set_fact:
+        cluster: "{{ cluster | default('ocp_local') }}"
+
+    - name: Ensure init cluster is set
+      ansible.builtin.set_fact:
+        init_cluster: "{{ init_cluster | default(false) }}"
+
+    - name: Wait for system to become reachable
+      ansible.builtin.wait_for_connection:
+
+    - name: Setup the services on the svc vm
+      ansible.builtin.include_role:
+        name: ocp_binaries
+        tasks_from: pxe.yml
+#      vars:
+#        ocp_binaries_assetsdir: hostvars['localhost']['ocp_binaries_assetsdir']
+#        ocp_binaries_webdir: hostvars['localhost']['ocp_binaries_webdir']

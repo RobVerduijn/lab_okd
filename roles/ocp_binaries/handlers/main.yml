@@ -1,0 +1,3 @@
+- name: Set init_cluster
+  ansible.builtin.set_fact:
+    init_cluster: true

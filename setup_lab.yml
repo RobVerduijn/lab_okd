@@ -24,10 +24,6 @@
       ansible.builtin.group_by:
         key: "{{ cluster }}"
 
-    - name: The version of the installation
-      ansible.builtin.debug:
-        msg: We will be installing ocp release {{ ocp_release }} on cluster {{ cluster }}
-
     - name: Ensure init cluster is set
       ansible.builtin.set_fact:
         init_cluster: "{{ init_cluster | default(false) }}"
@@ -38,8 +34,6 @@
         prompt: |-
           Reinitializing cluster: {{ cluster }}
           This means all systems from this cluster will be wiped
-          And the local configuration directory deleted
-          Press enter to continue
 
     - name: Clean up the lab
       ansible.builtin.include_role:

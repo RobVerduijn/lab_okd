@@ -1,0 +1,16 @@
+- name: Delete ocp directory
+  ansible.builtin.file:
+    path: "{{ ocp_binaries_assetsdir }}/{{ cluster }}"
+    state: absent
+  when: init_cluster | default(false) | bool
+
+- name: Create ocp directory
+  ansible.builtin.file:
+    path: "{{ ocp_binaries_assetsdir }}/{{ cluster }}"
+    mode: "0700"
+    state: directory
+  notify:
+    - Set init_cluster
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers

@@ -1,0 +1,46 @@
+- name: Check if ocp client files are installed
+  ansible.builtin.stat:
+    path: "{{ file }}"
+  register: ocp_client_files
+  loop_control:
+    loop_var: file
+  loop:
+    - "{{ ocp_binaries_assetsdir }}/{{ cluster }}/oc"
+    - "{{ ocp_binaries_assetsdir }}/{{ cluster }}/kubectl"
+    - "{{ ocp_binaries_assetsdir }}/{{ cluster }}/openshift-install"
+
+- name: Set file_missing
+  ansible.builtin.set_fact:
+    file_missing: true
+  when: not result['stat']['exists']
+  loop: "{{ ocp_client_files['results'] }}"
+  loop_control:
+    loop_var: result
+
+- name: Install ocp binaries
+  when: >-
+    (file_missing | default(false) | bool)
+  block:
+    - name: Download and unpack openshift client and install
+      ansible.builtin.unarchive:
+        src: "{{ url }}"
+        dest: "{{ ocp_binaries_assetsdir }}/{{ cluster }}"
+        remote_src: true
+      loop:
+        - "{{ ocp_client_url }}"
+        - "{{ ocp_install_url }}"
+      loop_control:
+        loop_var: url
+
+    - name: Create bash completion files
+      ansible.builtin.command: >-
+          {{ ocp_binaries_assetsdir }}/{{ cluster }}/{{ binary }} completion bash >
+          {{ lookup('ansible.builtin.env', 'HOME') }}/.bash_completion/{{ binary }}
+      loop:
+        - openshift-install
+        - oc
+        - kubectl
+      loop_control:
+        loop_var: binary
+      tags:
+        - skip_ansible_lint

@@ -1,30 +1,30 @@
 apiVersion: v1
-baseDomain: {{ basedomain }} 
+baseDomain: {{ ocp_infra_network['domain'] }} 
 compute: 
 - hyperthreading: Enabled 
   name: worker
-  replicas: {{ worker_replicas }}
+  replicas: {{ ocp_ignition_worker_replicas }}
 controlPlane: 
   hyperthreading: Enabled 
   name: master
-  replicas: {{ master_replicas }}
+  replicas: {{ ocp_ignition_master_replicas }}
 metadata:
-  name: {{ ocp_cluster_name }} 
+  name: {{ ocp_ignition_cluster_name }} 
 networking:
   clusterNetwork:
-{% for network in clusternetwork %}
+{% for network in ocp_ignition_clusternetwork %}
   - cidr: {{ network.cidr }}
     hostprefix: {{ network.hostprefix }}
 {% endfor %}
-  networkType: {{ ocp_networktype }} 
+  networkType: {{ ocp_ignition_networktype }} 
   serviceNetwork:
-{% for network in servicenetwork %}
+{% for network in ocp_ignition_servicenetwork %}
   - {{ network }}
 {% endfor %}
 platform:
   none: {} 
-pullSecret: '{{ ocp_pullsecret }}' 
-sshKey: '{{ ocp_core_sshkey }}'
+pullSecret: '{{ ocp_ignition_pullsecret }}' 
+sshKey: '{{ ocp_ignition_core_ssh_key }}'
 {% if ocp_local_registry is defined %}
 imageDigestSources:
 - mirrors:

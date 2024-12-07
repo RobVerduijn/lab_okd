@@ -1,6 +1,17 @@
+# for details see https://github.com/okd-project/okd/releases
+# fedora core-os https://fedoraproject.org/coreos/download?stream=stable#arches
+# ocp_coreos_url: https://quay.io/repository/
+
 ocp_cluster_name: ocp_local
 ocp_networktype: OVNKubernetes
+# for details see https://github.com/okd-project/okd/releases
+# fedora core-os https://fedoraproject.org/coreos/download?stream=stable#arches
+# ocp_coreos_url: https://quay.io/repository/
+
 ocp_release: 4.16.0-okd-scos.0
+# openshift download locations
+# ocp_client_url: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/
+# ocp_coreos_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/
 ocp_client_url: https://github.com/okd-project/okd-scos/releases/download/{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz
 ocp_install_url: https://github.com/okd-project/okd-scos/releases/download/{{ ocp_release }}/openshift-install-linux-{{ ocp_release }}.tar.gz
 ocp_webserver_coreos_path: /network/repo/scos
@@ -65,4 +76,3 @@ ocp_infra:
       mac: '52:54:00:00:00:08'
       ip: 10.0.0.8
       role: worker
-
