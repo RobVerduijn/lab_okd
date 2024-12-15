@@ -4,6 +4,12 @@
   become: false
 
   tasks:
+    - name: Add localhost to all
+      ansible.builtin.add_host:
+        name: localhost
+        groups:
+          - all
+
     - name: Check init settings and vm's
       ansible.builtin.include_role:
         name: prepare
@@ -28,6 +34,10 @@
   remote_user: root
 
   tasks:
+    - name: Check init settings and vm's
+      ansible.builtin.include_role:
+        name: prepare
+
     - name: Start svc vm
       community.libvirt.virt:
         name: "svc"

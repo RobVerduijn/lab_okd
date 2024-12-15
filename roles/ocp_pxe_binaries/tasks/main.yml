@@ -1,0 +1,11 @@
+- name: Determine file downloads
+  ansible.builtin.include_tasks:
+    file: set_vars.yml
+
+- name: Determine file downloads
+  ansible.builtin.include_tasks:
+    file: download.yml
+
+- name: Ensure all files are linked
+  ansible.builtin.include_tasks:
+    file: link.yml

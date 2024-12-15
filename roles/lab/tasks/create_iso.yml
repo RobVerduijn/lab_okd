@@ -1,5 +1,7 @@
 - name: Only run for svc and lb
-  when: host['init'] == 'kickstart'
+  when:
+    - host['init'] == 'kickstart'
+    - host['name'] in init_vms
   block:
     - name: Create tmp dir
       ansible.builtin.tempfile:

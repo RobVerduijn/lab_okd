@@ -1,0 +1,29 @@
+- name: Download files to content server
+  delegate_to: svc
+  block:
+    - name: Download initramfs
+      ansible.builtin.get_url:
+        url: "{{ initramfs_url }}"
+        dest: "{{ ocp_pxe_binaries_tftpdir }}"
+        checksum: sha256:{{ initramfs_sha256 }}
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Download kernel
+      ansible.builtin.get_url:
+        url: "{{ kernel_url }}"
+        dest: "{{ ocp_pxe_binaries_tftpdir }}"
+        checksum: sha256:{{ kernel_sha256 }}
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Download rootfs
+      ansible.builtin.get_url:
+        url: "{{ rootfs_url }}"
+        dest: "{{ ocp_pxe_binaries_webdir }}"
+        checksum: sha256:{{ rootfs_sha256 }}
+        mode: "0644"
+        owner: root
+        group: root

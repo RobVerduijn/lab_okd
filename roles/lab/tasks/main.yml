@@ -17,3 +17,10 @@
   loop: "{{ lab_infra['hosts'] }}"
   loop_control:
     loop_var: host
+
+- name: Add vm's to the ansible playbook hosts
+  ansible.builtin.include_tasks:
+    file: add_host.yml
+  loop: "{{ lab_infra['hosts'] }}"
+  loop_control:
+    loop_var: host

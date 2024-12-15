@@ -1,0 +1,6 @@
+- name: Add host
+  ansible.builtin.add_host:
+    name: "{{ host['name'] }}"
+    groups: "{{ host['group'] | default([]) }}"
+    ansible_host: "{{ host['ip'] }}"
+    ansible_user: "{{ host['user'] }}"

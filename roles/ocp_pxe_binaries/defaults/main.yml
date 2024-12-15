@@ -1,0 +1,2 @@
+ocp_pxe_binaries_tftpdir: /var/lib/tftpboot/boot
+ocp_pxe_binaries_webdir: /var/www/html

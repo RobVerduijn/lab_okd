@@ -10,8 +10,9 @@
 
 - name: Update systems
   ansible.builtin.dnf:
-    name: "{{ my_preferred_packages }}"
-    state: present
+    name: '*'
+    state: latest
+    update_only: true
 
 - name: Check if system needs restarting
   ansible.builtin.command: needs-restarting -r

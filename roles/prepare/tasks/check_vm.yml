@@ -4,6 +4,7 @@
   register: current_vms
   vars:
     ansible_user: root
+  delegate_to: localhost
 #    ansible_connection: ssh
 
 - name: Set the init_svc if there is no svc vm

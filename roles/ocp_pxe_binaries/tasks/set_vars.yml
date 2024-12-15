@@ -1,0 +1,22 @@
+- name: Determine coreos stream metadata
+  ansible.builtin.shell: "{{ ocp_assetsdir }}/openshift-install coreos print-stream-json"
+  args:
+    chdir: "{{ ocp_assetsdir }}"
+  register: coreos_stream_metadata
+  delegate_to: localhost
+  tags:
+    - skip_ansible_lint
+
+- name: Store output in var
+  ansible.builtin.set_fact:
+    coreos_stream_metadata: "{{ coreos_stream_metadata['stdout'] | from_json }}"
+
+- name: Set the download urls
+  ansible.builtin.set_fact:
+    initramfs_url: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['initramfs']['location'] }}"
+    kernel_url: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['kernel']['location'] }}"
+    rootfs_url: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['rootfs']['location'] }}"
+    initramfs_sha256: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['initramfs']['sha256'] }}"
+    kernel_sha256: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['kernel']['sha256'] }}"
+    rootfs_sha256: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['rootfs']['sha256'] }}"
+

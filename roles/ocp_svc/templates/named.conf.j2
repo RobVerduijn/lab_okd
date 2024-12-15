@@ -69,9 +69,9 @@ zone "." IN {
 };
 
 
-zone "{{ ocp_infra_network['domain'] }}" {
+zone "{{ ocp_infra['network']['domain'] }}" {
 	type master;
-	file "{{ ocp_infra_network['domain'] }}.zone";
+	file "{{ ocp_infra['network']['domain'] }}.zone";
 };
 
 zone "{{ (ansible_host | ansible.builtin.split('.'))[:3] | reverse | join('.') }}.in-addr.arpa" IN {

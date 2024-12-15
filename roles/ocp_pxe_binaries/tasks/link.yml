@@ -1,0 +1,20 @@
+- name: Ensure the version less link exists
+  delegate_to: svc
+  block:
+    - name: Ensure initramfs link is set
+      ansible.builtin.file:
+        src: "{{ initramfs_url.split('/')[-1] }}"
+        dest: "{{ ocp_pxe_binaries_tftpdir }}/scos-live-initramfs-x86_64.img"
+        state: link
+
+    - name: Ensure kernel link is set
+      ansible.builtin.file:
+        src: "{{ kernel_url.split('/')[-1] }}"
+        dest: "{{ ocp_pxe_binaries_tftpdir }}/scos-live-kernel-x86_64.img"
+        state: link
+
+    - name: Ensure rootfs link is set
+      ansible.builtin.file:
+        src: "{{ rootfs_url.split('/')[-1] }}"
+        dest: "{{ ocp_pxe_binaries_webdir }}/scos-live-rootfs.x86_64.img"
+        state: link

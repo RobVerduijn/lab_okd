@@ -1,10 +1,10 @@
 {% set ip = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'svc') | map(attribute='ip'))[0] %}
-{% set nw = ocp_infra_network['network'] %}
-{% set gw = ocp_infra_network['gateway'] %}
-{% set nm = ocp_infra_network['netmask'] %}
-{% set bc = ocp_infra_network['broadcast'] %}
+{% set nw = ocp_infra['network']['network'] %}
+{% set gw = ocp_infra['network']['gateway'] %}
+{% set nm = ocp_infra['network']['netmask'] %}
+{% set bc = ocp_infra['network']['broadcast'] %}
 {% set dns = ip %}{# comma separated list of ip's #}
-{% set domain = ocp_infra_network['domain'] %}
+{% set domain = ocp_infra['network']['domain'] %}
 ddns-update-style none;
 ignore client-updates;
 allow booting;
