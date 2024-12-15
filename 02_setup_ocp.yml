@@ -66,7 +66,7 @@
     - name: Wait for system to become reachable
       ansible.builtin.wait_for_connection:
 
-    - name: Setup the services on the svc vm
+    - name: Setup the pxe binaries on the svc vm
       ansible.builtin.include_role:
         name: ocp_pxe_binaries
 

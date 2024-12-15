@@ -1,0 +1,13 @@
+- name: Copy ignition files
+  ansible.builtin.copy:
+    src: "{{ ocp_assetsdir }}/{{ file }}"
+    dest: "{{ ocp_pxe_binaries_webdir }}/{{ file }}"
+    mode: "0644"
+    owner: root
+    group: root
+  loop:
+    - master.ign
+    - worker.ign
+    - bootstrap.ign
+  loop_control:
+    loop_var: file

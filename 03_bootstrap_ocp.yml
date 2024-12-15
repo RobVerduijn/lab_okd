@@ -5,17 +5,9 @@
   gather_facts: false
 
   tasks:
-    - name: Ensure cluster is set
-      ansible.builtin.set_fact:
-        cluster: "{{ cluster | default('ocp_local') }}"
-
-    - name: Ensure init cluster is set
-      ansible.builtin.set_fact:
-        init_cluster: "{{ init_cluster | default(false) }}"
-
-    - name: Include cluster vars
-      ansible.builtin.group_by:
-        key: "{{ cluster }}"
+    - name: Check init settings and vm's
+      ansible.builtin.include_role:
+        name: prepare
 
     - name: Bootsrap the cluster
       ansible.builtin.include_role:

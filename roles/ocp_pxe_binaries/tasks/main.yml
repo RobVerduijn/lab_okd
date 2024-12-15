@@ -9,3 +9,7 @@
 - name: Ensure all files are linked
   ansible.builtin.include_tasks:
     file: link.yml
+
+- name: Ensure the ignition files are present
+  ansible.builtin.include_tasks:
+    file: ignition.yml
