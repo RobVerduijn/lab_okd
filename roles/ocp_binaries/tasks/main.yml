@@ -2,6 +2,10 @@
   ansible.builtin.include_tasks:
     file: dir.yml
 
+- name: Check binaries
+  ansible.builtin.include_tasks:
+    file: check_ocp_binaries.yml
+
 - name: Download binaries
   ansible.builtin.include_tasks:
-    file: binaries.yml
+    file: download_ocp_binaries.yml

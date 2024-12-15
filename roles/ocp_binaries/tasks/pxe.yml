@@ -1,5 +1,5 @@
 - name: Determine coreos stream metadata
-  ansible.builtin.command: "{{ ocp_binaries_assetsdir }}/{{ cluster }}/openshift-install coreos print-stream-json"
+  ansible.builtin.command: "{{ ocp_assetsdir }}/openshift-install coreos print-stream-json"
   register: coreos_stream_metadata
   tags:
     - skip_ansible_lint
@@ -70,7 +70,7 @@
 
 - name: Copy ignition files to ignition dir on webserver
   ansible.builtin.copy:
-    src: "{{ ocp_binaries_assetsdir }}/{{ cluster }}/{{ ignitionfile }}"
+    src: "{{ ocp_assetsdir }}/{{ cluster }}/{{ ignitionfile }}"
     dest: "{{ ocp_binaries_webdir }}/{{ ignitionfile }}"
     setype: httpd_sys_content_t
     mode: "0644"

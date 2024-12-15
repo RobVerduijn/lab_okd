@@ -1,0 +1,25 @@
+- name: Install ocp binaries
+  when: download_files | default(false) | bool
+  block:
+    - name: Download and unpack openshift client and install
+      ansible.builtin.unarchive:
+        src: "{{ url }}"
+        dest: "{{ ocp_assetsdir }}"
+        remote_src: true
+      loop:
+        - "{{ ocp_client_url }}"
+        - "{{ ocp_install_url }}"
+      loop_control:
+        loop_var: url
+
+    - name: Create bash completion files
+      ansible.builtin.shell: >-
+        {{ ocp_assetsdir }}/{{ binary }} completion bash > {{ lookup('ansible.builtin.env', 'HOME') }}/.bash_completion/{{ binary }}
+      loop:
+        - openshift-install
+        - oc
+        - kubectl
+      loop_control:
+        loop_var: binary
+      tags:
+        - skip_ansible_lint

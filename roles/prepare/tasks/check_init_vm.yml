@@ -1,0 +1,17 @@
+- name: Add svc to init_vms
+  ansible.builtin.set_fact:
+    init_vms: "{{ init_vms | default([]) + ['svc'] }}"
+    clean_lab: true
+  when: init_svc | default(false) | bool
+
+- name: Add lb to init_vms
+  ansible.builtin.set_fact:
+    init_vms: "{{ init_vms | default([]) + ['lb'] }}"
+    clean_lab: true
+  when: init_lb | default(false) | bool
+
+- name: Add node vm's to init_vns
+  ansible.builtin.set_fact:
+    init_vms: "{{ init_vms | default([]) + ['master01', 'master02', 'master03', 'worker01', 'worker02', 'bootstrap'] }}"
+    clean_lab: true
+  when: init_cluster | default(false) | bool

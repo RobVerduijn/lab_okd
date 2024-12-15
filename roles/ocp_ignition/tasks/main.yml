@@ -4,22 +4,16 @@
 
 - name: Check if there already is a configuration
   ansible.builtin.stat:
-    path: "{{ ocp_ignition_assetsdir }}/{{ cluster }}"
+    path: "{{ ocp_assetsdir }}/auth/kubeconfig"
   register: config_check
 
-- name: Warn about existing config
-  ansible.builtin.debug:
-    msg: |
-      There is already a configuration present at {{ ocp_ignition_assetsdir }}/{{ cluster }}
-      I will not replace it.
-
 - name: Only run these when there is no configuration
-  #when: not config_check['stat']['exists']
+  when: not config_check['stat']['exists']
   block:
     - name: Create install-config.yaml
       ansible.builtin.template:
         src: install-config.yaml.j2
-        dest: "{{ ocp_ignition_assetsdir }}/{{ cluster }}/install-config.yaml"
+        dest: "{{ ocp_assetsdir }}/install-config.yaml"
         mode: "0700"
         owner: "{{ lookup('ansible.builtin.env', 'USER') }}"
         group: "{{ lookup('ansible.builtin.env', 'USER') }}"
@@ -27,13 +21,15 @@
     - name: Create manifest files
       ansible.builtin.command: openshift-install create manifests
       args:
-        chdir: "{{ ocp_ignition_assetsdir }}/{{ cluster }}"
-      tags:
-        - skip_ansible_lint
-    - fail:
+        chdir: "{{ ocp_assetsdir }}"
+        creates: "{{ ocp_assetsdir }}/manifests"
+      when: not untill_install_config | default(false) | bool
+
     - name: Create ignition files
       ansible.builtin.command: "openshift-install create ignition-configs"
       args:
-        chdir: "{{ ocp_ignition_assetsdir }}/{{ cluster }}"
-      tags:
-        - skip_ansible_lint
+        chdir: "{{ ocp_assetsdir }}"
+        creates: "{{ ocp_assetsdir }}/master.ign"
+      when:
+        - not untill_install_config | default(false) | bool
+        - not untill_manifests | default(false) | bool

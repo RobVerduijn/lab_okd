@@ -5,25 +5,9 @@
   gather_facts: false
 
   tasks:
-    - name: Ensure cluster is set
-      ansible.builtin.set_fact:
-        cluster: "{{ cluster | default('ocp_local') }}"
-
-    - name: Ensure init cluster is set
-      ansible.builtin.set_fact:
-        init_cluster: "{{ init_cluster | default(false) }}"
-
-    - name: Load vars from group {{ cluster }}
-      ansible.builtin.group_by:
-        key: "{{ cluster }}"
-
-    - name: Set init all
-      ansible.builtin.set_fact:
-        init_svc: true
-        init_lb: true
-        init_cluster: true
-      when: init_all | default(false) | bool
-
+    - name: Check init settings and vm's
+      ansible.builtin.include_role:
+        name: prepare
 
     - name: The version of the installation
       ansible.builtin.debug:
@@ -53,19 +37,15 @@
   remote_user: root
 
   tasks:
+    - name: Check init settings and vm's
+      ansible.builtin.include_role:
+        name: prepare
+
     - name: Start svc vm
       community.libvirt.virt:
         name: "svc"
         state: running
       delegate_to: localhost
-
-    - name: Ensure cluster is set
-      ansible.builtin.set_fact:
-        cluster: "{{ cluster | default('ocp_local') }}"
-
-    - name: Ensure init cluster is set
-      ansible.builtin.set_fact:
-        init_cluster: "{{ init_cluster | default(false) }}"
 
     - name: Wait for system to become reachable
       ansible.builtin.wait_for_connection:

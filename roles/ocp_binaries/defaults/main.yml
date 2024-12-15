@@ -1,3 +1,2 @@
-ocp_binaries_assetsdir: "{{ playbook_dir }}"
 ocp_binaries_tftpdir: /var/lib/tftpboot/boot
 ocp_binaries_webdir: /var/www/html

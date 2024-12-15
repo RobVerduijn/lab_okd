@@ -8,4 +8,3 @@ ocp_ignition_networktype: OVNKubernetes
 ocp_ignition_servicenetwork:
   - 172.30.0.0/16
 ocp_ignition_pullsecret: '{"auths":{"fake":{"auth":"aWQ6cGFzcwo="}}}'
-ocp_ignition_assetsdir: "{{ playbook_dir }}"

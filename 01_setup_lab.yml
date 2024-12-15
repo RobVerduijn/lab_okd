@@ -4,14 +4,6 @@
   become: false
 
   tasks:
-    - name: Ensure cluster is set
-      ansible.builtin.set_fact:
-        cluster: "{{ cluster | default('ocp_local') }}"
-
-    - name: Load vars from group {{ cluster }}
-      ansible.builtin.group_by:
-        key: "{{ cluster }}"
-
     - name: Check init settings and vm's
       ansible.builtin.include_role:
         name: prepare
@@ -22,14 +14,6 @@
         prompt: |-
           Reinitializing cluster: {{ cluster }}
           This means all systems from this cluster will be wiped
-
-    - name: Clean up the lab
-      ansible.builtin.include_role:
-        name: lab
-        tasks_from: clean
-      when: clean_lab | default(false) | bool
-      vars:
-        lab_infra: '{{ ocp_infra }}'
 
     - name: Create vm's
       ansible.builtin.include_role:
@@ -67,9 +51,9 @@
   remote_user: root
 
   tasks:
-    - name: Ensure enable bootstrap is set
-      ansible.builtin.set_fact:
-        enable_bootstrap: "{{ hostvars['localhost']['init_cluster'] | default(false) }}"
+    - name: Check init settings and vm's
+      ansible.builtin.include_role:
+        name: prepare
 
     - name: Start svc vm
       community.libvirt.virt:
@@ -79,14 +63,6 @@
 
     - name: Wait for system to become reachable
       ansible.builtin.wait_for_connection:
-
-    - name: Ensure cluster is set
-      ansible.builtin.set_fact:
-        cluster: "{{ cluster | default('ocp_local') }}"
-
-    - name: Load vars from group {{ cluster }}
-      ansible.builtin.group_by:
-        key: "{{ cluster }}"
 
     - name: Setup loadbalancer
       ansible.builtin.include_role:
@@ -99,30 +75,10 @@
   remote_user: root
 
   tasks:
-    - name: Ensure the package facts are loaded
-      ansible.builtin.package_facts:
-      when: ansible_facts['packages'] is not defined
-
-    - name: Install the packages that I like
-      ansible.builtin.dnf:
-        name: "{{ my_preferred_packages }}"
-        state: present
-      when: "my_preferred_packages | difference(ansible_facts['packages']) | length > 0"
-
-    - name: Update systems
-      ansible.builtin.dnf:
-        name: "{{ my_preferred_packages }}"
-        state: present
-
-    - name: Check if system needs restarting
-      ansible.builtin.command: needs-restarting -r
-      register: needs_restarting
-      changed_when: false | bool
-      failed_when: needs_restarting['rc'] > 1
-
-    - name: Restart machine {{ inventory_hostname }}
-      ansible.builtin.reboot:
-      when: needs_restarting['rc'] | default(0) == 1
+    - name: Include personal preferences
+      ansible.builtin.include_role:
+        name: lab
+        tasks_from: personal
 
 #    - name: The status of mirror installation is
 #      ansible.builtin.debug:

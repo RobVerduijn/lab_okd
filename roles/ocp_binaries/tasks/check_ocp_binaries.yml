@@ -1,0 +1,46 @@
+- name: Check if ocp client files are installed
+  ansible.builtin.stat:
+    path: "{{ file }}"
+  register: ocp_client_files
+  loop_control:
+    loop_var: file
+  loop:
+    - "{{ ocp_assetsdir }}/oc"
+    - "{{ ocp_assetsdir }}/kubectl"
+    - "{{ ocp_assetsdir }}/openshift-install"
+
+- name: Set download_binary if a binary is missing
+  ansible.builtin.set_fact:
+    download_files: true
+  when: not result['stat']['exists']
+  loop: "{{ ocp_client_files['results'] }}"
+  loop_control:
+    loop_var: result
+
+- name: Only run when there is no files missing
+  when: not download_files | default(false) | bool
+  block:
+    - name: Check version of oc
+      ansible.builtin.command: "{{ ocp_assetsdir }}/oc version --client=true -o json"
+      register: oc_version
+      changed_when: false
+
+    - name: Check version of kubectl
+      ansible.builtin.command: "{{ ocp_assetsdir }}/kubectl version --client=true -o json"
+      register: kubectl_version
+      changed_when: false
+
+    - name: Check version of openshift-install
+      ansible.builtin.command: "{{ ocp_assetsdir }}/openshift-install version"
+      register: install_version
+      changed_when: false
+
+    - name: Set download if binary version mismatches
+      ansible.builtin.set_fact:
+        download_files: true
+      when: >-
+        (oc_version['stdout'] | from_json)['releaseClientVersion'] != ocp_release
+        or
+        (kubectl_version['stdout'] | from_json)['kustomizeVersion'] != (oc_version['stdout'] | from_json)['kustomizeVersion']
+        or
+        (install_version['stdout_lines'][0] | split(' '))[1] != ocp_release
