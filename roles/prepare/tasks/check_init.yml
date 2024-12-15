@@ -1,0 +1,26 @@
+- name: Set init all
+  ansible.builtin.set_fact:
+    init_svc: true
+    init_lb: true
+    init_cluster: true
+    clean_lab: true
+  when: init_all | default('false') | bool
+
+- name: Add svc to init_vms
+  ansible.builtin.set_fact:
+    init_vms: "{{ init_vms | default([]) + ['svc'] }}"
+    clean_lab: true
+  when: init_svc | default(false) | bool
+
+- name: Add lb to init_vms
+  ansible.builtin.set_fact:
+    init_vms: "{{ init_vms | default([]) + ['lb'] }}"
+    clean_lab: true
+  when: init_lb | default(false) | bool
+
+- name: Ensure init_cluster is set and vm's added
+  ansible.builtin.set_fact:
+    init_cluster: "{{ init_cluster | default(false) }}"
+    init_vms: "{{ init_vms | default([]) + ['master01', 'master02', 'master03', 'worker01', 'worker02', 'bootstrap'] }}"
+    clean_lab: true
+  when: init_cluster | default(false) | bool

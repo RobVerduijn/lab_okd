@@ -13,6 +13,9 @@
     initramfs_url: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['initramfs']['location'] }}"
     kernel_url: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['kernel']['location'] }}"
     rootfs_url: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['rootfs']['location'] }}"
+    initramfs_sha256: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['initramfs']['sha256'] }}"
+    kernel_sha256: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['kernel']['sha256'] }}"
+    rootfs_sha256: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['rootfs']['sha256'] }}"
 
 - name: Download files to content server
   delegate_to: "{{ content_server }}"

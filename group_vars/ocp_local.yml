@@ -15,64 +15,73 @@ ocp_release: 4.16.0-okd-scos.0
 ocp_client_url: https://github.com/okd-project/okd-scos/releases/download/{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz
 ocp_install_url: https://github.com/okd-project/okd-scos/releases/download/{{ ocp_release }}/openshift-install-linux-{{ ocp_release }}.tar.gz
 ocp_webserver_coreos_path: /network/repo/scos
-
-ocp_infra_libvirt_network:
-  type: network
-  source: lab_ocp
 ocp_svc:
   dns_forwarders:
     - 10.0.0.254
-ocp_infra_network:
-  gateway: 10.0.0.254
-  network: 10.0.0.0
-  netmask: 255.255.255.0
-  nameservers: 10.0.0.1
-  domain: ocp.lab
-  broadcast: 10.0.0.255
-  timesources:
-    - 0.nl.pool.ntp.org
-    - 1.nl.pool.ntp.org
-    - 2.nl.pool.ntp.org
-    - 3.nl.pool.ntp.org
+
+lab_libvirt_network:
+  type: network
+  source: lab_ocp
 
 ocp_infra:
+  network:
+    gateway: 10.0.0.254
+    network: 10.0.0.0
+    netmask: 255.255.255.0
+    nameservers: 10.0.0.1
+    domain: ocp.lab
+    broadcast: 10.0.0.255
+    timesources:
+      - 0.nl.pool.ntp.org
+      - 1.nl.pool.ntp.org
+      - 2.nl.pool.ntp.org
+      - 3.nl.pool.ntp.org
+
   hosts:
     - name: svc
       ip: 10.0.0.1
       mac: '52:54:00:00:00:01'
       role: svc
+      init: kickstart
 
     - name: lb
       mac: '52:54:00:00:00:02'
       ip: 10.0.0.2
       role: loadbalancer
+      init: kickstart
 
     - name: bootstrap
       mac: '52:54:00:00:00:03'
       ip: 10.0.0.3
       role: bootstrap
+      init: ignition
 
     - name: master01
       mac: '52:54:00:00:00:04'
       ip: 10.0.0.4
       role: master
+      init: ignition
 
     - name: master02
       mac: '52:54:00:00:00:05'
       ip: 10.0.0.5
       role: master
+      init: ignition
 
     - name: master03
       mac: '52:54:00:00:00:06'
       ip: 10.0.0.6
       role: master
+      init: ignition
 
     - name: worker01
       mac: '52:54:00:00:00:07'
       ip: 10.0.0.7
       role: worker
+      init: ignition
 
     - name: worker02
       mac: '52:54:00:00:00:08'
       ip: 10.0.0.8
       role: worker
+      init: ignition

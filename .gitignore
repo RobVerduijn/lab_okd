@@ -1,2 +1,4 @@
 collections/ansible_collections
 .vault_pass.gpg
+ocp_local
+.openshift_install.log

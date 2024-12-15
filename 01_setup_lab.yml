@@ -1,21 +1,9 @@
-- name: Configure the bastion system
+- name: Setup the lab
   hosts: localhost
   gather_facts: false
   become: false
 
   tasks:
-    - name: Check if vm's are present
-      ansible.builtin.include_role:
-        name: ocp_infra
-        tasks_from: check_vm.yml
-
-    - name: Init all
-      ansible.builtin.set_fact:
-        init_svc: true
-        init_lb: true
-        init_cluster: true
-      when: init_all | default('false') | bool
-
     - name: Ensure cluster is set
       ansible.builtin.set_fact:
         cluster: "{{ cluster | default('ocp_local') }}"
@@ -24,9 +12,9 @@
       ansible.builtin.group_by:
         key: "{{ cluster }}"
 
-    - name: Ensure init cluster is set
-      ansible.builtin.set_fact:
-        init_cluster: "{{ init_cluster | default(false) }}"
+    - name: Check init settings and vm's
+      ansible.builtin.include_role:
+        name: prepare
 
     - name: Warn about cluster init
       when: init_cluster | default(false) | bool
@@ -38,11 +26,16 @@
     - name: Clean up the lab
       ansible.builtin.include_role:
         name: lab
-      when: (init_svc | default(false) | bool) or (init_lb | default(false) | bool) or (init_cluster | default(false) | bool)
+        tasks_from: clean
+      when: clean_lab | default(false) | bool
+      vars:
+        lab_infra: '{{ ocp_infra }}'
 
     - name: Create vm's
       ansible.builtin.include_role:
-        name: ocp_infra
+        name: lab
+      vars:
+        lab_infra: "{{ ocp_infra }}"
 
 - name: Configure svc host
   hosts: svc

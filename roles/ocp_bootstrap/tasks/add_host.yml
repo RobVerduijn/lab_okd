@@ -1,0 +1,5 @@
+- name: Add host
+  ansible.builtin.add_host:
+    name: "{{ host['name'] }}"
+    ansible_hostname: "{{ host['ip'] }}"
+    ansible_user: core

@@ -2,24 +2,38 @@
   ansible.builtin.set_fact:
     ocp_ignition_core_ssh_key: "{{ ocp_ignition_core_ssh_key | default(lookup('file', lookup('ansible.builtin.env', 'HOME') + '/.ssh/id_rsa.pub')) }}"
 
-- name: Create install-config.yaml
-  ansible.builtin.template:
-    src: install-config.yaml.j2
-    dest: "{{ ocp_ignition_assetsdir }}/{{ cluster }}/install-config.yaml"
-    mode: "0700"
-    owner: "{{ lookup('ansible.builtin.env', 'USER') }}"
-    group: "{{ lookup('ansible.builtin.env', 'USER') }}"
+- name: Check if there already is a configuration
+  ansible.builtin.stat:
+    path: "{{ ocp_ignition_assetsdir }}/{{ cluster }}"
+  register: config_check
 
-- name: Create manifest files
-  ansible.builtin.command: openshift-install create manifests
-  args:
-    chdir: "{{ ocp_ignition_assetsdir }}/{{ cluster }}"
-  tags:
-    - skip_ansible_lint
+- name: Warn about existing config
+  ansible.builtin.debug:
+    msg: |
+      There is already a configuration present at {{ ocp_ignition_assetsdir }}/{{ cluster }}
+      I will not replace it.
 
-- name: Create ignition files
-  ansible.builtin.command: "openshift-install create ignition-configs"
-  args:
-    chdir: "{{ ocp_ignition_assetsdir }}/{{ cluster }}"
-  tags:
-    - skip_ansible_lint
+- name: Only run these when there is no configuration
+  #when: not config_check['stat']['exists']
+  block:
+    - name: Create install-config.yaml
+      ansible.builtin.template:
+        src: install-config.yaml.j2
+        dest: "{{ ocp_ignition_assetsdir }}/{{ cluster }}/install-config.yaml"
+        mode: "0700"
+        owner: "{{ lookup('ansible.builtin.env', 'USER') }}"
+        group: "{{ lookup('ansible.builtin.env', 'USER') }}"
+
+    - name: Create manifest files
+      ansible.builtin.command: openshift-install create manifests
+      args:
+        chdir: "{{ ocp_ignition_assetsdir }}/{{ cluster }}"
+      tags:
+        - skip_ansible_lint
+    - fail:
+    - name: Create ignition files
+      ansible.builtin.command: "openshift-install create ignition-configs"
+      args:
+        chdir: "{{ ocp_ignition_assetsdir }}/{{ cluster }}"
+      tags:
+        - skip_ansible_lint

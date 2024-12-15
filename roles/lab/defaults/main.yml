@@ -1,9 +1,43 @@
-lab_clean_hosts_lines:
-  - 10.0.0.1
-  - 10.0.0.2
-  - 10.0.0.3
-  - 10.0.0.4
-  - 10.0.0.5
-  - 10.0.0.6
-  - 10.0.0.7
-  - 10.0.0.8
+# don't set this to true unless you are sure that the entire pxe boot chain
+# is configured properly for secure uefi booting
+lab_libvirt_secure_boot: false
+lab_libvirt_boot: efi
+lab_libvirt_storage_location: /var/lib/libvirt/images
+
+lab_root_password: secret
+lab_admin: admin
+lab_admin_password: secret
+
+lab_rocky_iso_url: https://download.rockylinux.org/pub/rocky/9/isos/x86_64/Rocky-9-latest-x86_64-minimal.iso
+lab_role:
+  svc:
+    ram: 2
+    ramunit: GiB
+    vcpu: 2
+    sda: 20
+    start: true
+  bootstrap:
+    ram: 10
+    ramunit: GiB
+    vcpu: 4
+    sda: 100
+    start: false
+  master:
+    ram: 10
+    ramunit: GiB
+    vcpu: 4
+    sda: 100
+    start: false
+  worker:
+    ram: 8
+    ramunit: GiB
+    vcpu: 2
+    sda: 100
+    sdb: 100
+    start: false
+  loadbalancer:
+    ram: 2
+    ramunit: GiB
+    vcpu: 2
+    sda: 20
+    start: true

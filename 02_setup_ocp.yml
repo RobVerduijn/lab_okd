@@ -17,6 +17,14 @@
       ansible.builtin.group_by:
         key: "{{ cluster }}"
 
+    - name: Set init all
+      ansible.builtin.set_fact:
+        init_svc: true
+        init_lb: true
+        init_cluster: true
+      when: init_all | default(false) | bool
+
+
     - name: The version of the installation
       ansible.builtin.debug:
         msg: We will be installing ocp release {{ ocp_release }} on cluster {{ cluster }}
@@ -66,6 +74,8 @@
       ansible.builtin.include_role:
         name: ocp_binaries
         tasks_from: pxe.yml
+
+
 #      vars:
 #        ocp_binaries_assetsdir: hostvars['localhost']['ocp_binaries_assetsdir']
 #        ocp_binaries_webdir: hostvars['localhost']['ocp_binaries_webdir']

@@ -1,18 +1,24 @@
+{% set hostname = host['name'] %}
+{% set role = host['role'] %}
+{% set ram = lab_role[role]['ram'] %}
+{% set ramunit = lab_role[role]['ramunit'] %}
+{% set vcpu = lab_role[role]['vcpu'] %}
+
 <domain type="kvm">
-  <name>{{ host['name'] }}</name>
+  <name>{{ hostname }}</name>
   <metadata>
     <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
       <libosinfo:os id="http://fedoraproject.org/coreos/stable"/>
     </libosinfo:libosinfo>
   </metadata>
-  <memory unit="Gib">{{ ocp_infra_role[host['role']]['ram'] }}</memory>
-  <currentMemory unit="{{ ocp_infra_role[host['role']]['ramunit'] }}">{{ ocp_infra_role[host['role']]['ram'] }}</currentMemory>
-  <vcpu placement="static">{{ ocp_infra_role[host['role']]['vcpu'] }}</vcpu>
-  <os{% if ocp_infra_libvirt_boot == "efi"  %} firmware="efi"{% endif %}>
+  <memory unit="Gib">{{ ram }}</memory>
+  <currentMemory unit="{{ ramunit }}">{{ ram }}</currentMemory>
+  <vcpu placement="static">{{ vcpu }}</vcpu>
+  <os{% if lab_libvirt_boot == "efi"  %} firmware="efi"{% endif %}>
     <type arch="x86_64" machine="pc-q35-8.2">hvm</type>
-{% if ocp_infra_libvirt_boot == "efi"  %}
+{% if lab_libvirt_boot == "efi"  %}
     <firmware>
-    {% if ocp_infra_libvirt_secure_boot %}
+    {% if lab_libvirt_secure_boot %}
       <feature enabled="yes" name="enrolled-keys"/>
       <feature enabled="yes" name="secure-boot"/>
     </firmware>
@@ -50,10 +56,10 @@
   <devices>
     <emulator>/usr/bin/qemu-system-x86_64</emulator>
 {% for drive in ['sda','sdb'] %}
-{%  if ocp_infra_role[host['role']][drive] is defined %}
+{%  if lab_role[role][drive] is defined %}
     <disk type="file" device="disk">
       <driver name="qemu" type="qcow2" discard="unmap"/>
-      <source file="{{ ocp_infra_libvirt_storage_location }}/{{ host['name'] }}_{{ drive }}.qcow2"/>
+      <source file="{{ lab_libvirt_storage_location }}/{{ hostname }}_{{ drive }}.qcow2"/>
       <target dev="{{ drive }}" bus="scsi"/>
 {%    if drive == 'sda' %}
       <boot order="1"/>
@@ -64,14 +70,14 @@
 {% if host['role'] in ['svc','loadbalancer'] %}
     <disk type="file" device="cdrom">
       <driver name="qemu" type="raw"/>
-      <source file="{{ ocp_infra_libvirt_storage_location }}/{{ (ocp_infra_rocky_iso_url | ansible.builtin.split('/'))[-1] }}"/>
+      <source file="{{ lab_libvirt_storage_location }}/{{ (lab_rocky_iso_url | ansible.builtin.split('/'))[-1] }}"/>
       <target dev="sdc" bus="scsi"/>
       <readonly/>
       <boot order="2"/>
     </disk>
     <disk type="file" device="cdrom">
       <driver name="qemu" type="raw"/>
-      <source file="{{ ocp_infra_libvirt_storage_location }}/{{ host['name'] }}-ks.iso"/>
+      <source file="{{ lab_libvirt_storage_location }}/{{ hostname }}-ks.iso"/>
       <target dev="sdd" bus="scsi"/>
       <readonly/>
     </disk>
@@ -81,9 +87,9 @@
     <controller type="virtio-serial" index="0">
     </controller>
     <controller type="scsi" index="0" model="virtio-scsi"/>
-    <interface type="{{ ocp_infra_libvirt_network['type'] }}">
+    <interface type="{{ lab_libvirt_network['type'] }}">
       <mac address="{{ host['mac'] }}"/>
-      <source {{ ocp_infra_libvirt_network['type'] }}="{{ ocp_infra_libvirt_network['source'] }}"/>
+      <source {{ lab_libvirt_network['type'] }}="{{ lab_libvirt_network['source'] }}"/>
       <model type="virtio"/>
       <boot order="3"/>
     </interface>

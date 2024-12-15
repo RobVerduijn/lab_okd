@@ -32,15 +32,15 @@
       loop_control:
         loop_var: url
 
-    - name: Create bash completion files
-      ansible.builtin.command: >-
-          {{ ocp_binaries_assetsdir }}/{{ cluster }}/{{ binary }} completion bash >
-          {{ lookup('ansible.builtin.env', 'HOME') }}/.bash_completion/{{ binary }}
-      loop:
-        - openshift-install
-        - oc
-        - kubectl
-      loop_control:
-        loop_var: binary
-      tags:
-        - skip_ansible_lint
+    # - name: Create bash completion files
+    #   ansible.builtin.command: >-
+    #       {{ ocp_binaries_assetsdir }}/{{ cluster }}/{{ binary }} completion bash >
+    #       {{ lookup('ansible.builtin.env', 'HOME') }}/.bash_completion/{{ binary }}
+    #   loop:
+    #     - openshift-install
+    #     - oc
+    #     - kubectl
+    #   loop_control:
+    #     loop_var: binary
+    #   tags:
+    #     - skip_ansible_lint

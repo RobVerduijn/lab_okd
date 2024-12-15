@@ -1,0 +1,7 @@
+- name: Check the status of the vm's
+  ansible.builtin.include_tasks:
+    file: check_vm.yml
+
+- name: Check the init settings
+  ansible.builtin.include_tasks:
+    file: check_init.yml

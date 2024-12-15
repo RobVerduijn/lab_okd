@@ -1,21 +1,21 @@
 {#- see https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/automatically_installing_rhel/kickstart-commands-and-options-reference_rhel-installer -#}
 {% set hostname = host['name'] %}
-{% set gw = ocp_infra_network['gateway'] %}
+{% set gw = lab_infra['network']['gateway'] %}
 {% set ip = host['ip'] %}
-{% set nm = ocp_infra_network['netmask'] %}
-{% set dns = ocp_infra_network['gateway'] %}{# comma separated list of ip's, using gateway as dns because there is no local dns yet#}
-{% set domain = ocp_infra_network['domain'] %}
-{% set timesources = ocp_infra_network['timesources'] %}
-{% set root_password = ocp_infra_root_password %}
-{% set admin_password = ocp_infra_admin_password %}
+{% set nm = lab_infra['network']['netmask'] %}
+{% set dns = lab_infra['network']['gateway'] %}{# comma separated list of ip's, using gateway as dns because there is no local dns yet#}
+{% set domain = lab_infra['network']['domain'] %}
+{% set timesources = lab_infra['network']['timesources'] %}
+{% set root_password = lab_root_password %}
+{% set admin_password = lab_admin_password %}
 {# default use the ~/.ssh/id_rsa.pub of the current user for root and admin #}
-{% set root_pubkey = ocp_infra_root_pubkey |
+{% set root_pubkey = lab_root_pubkey |
   default(
     lookup('ansible.builtin.file',
       lookup('ansible.builtin.env', 'HOME')
         + '/.ssh/id_rsa.pub')
          )%}
-{%- set admin_pubkey = ocp_infra_admin_pubkey | default(root_pubkey) %}
+{%- set admin_pubkey = lab_admin_pubkey | default(root_pubkey) %}
 #version=RHEL9
 # Use graphical install
 graphical

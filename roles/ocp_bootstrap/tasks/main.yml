@@ -1,0 +1,16 @@
+- name: Add hosts
+  ansible.builtin.include_tasks:
+    file: add_host.yml
+  loop: "{{ ocp_infra['hosts'] }}"
+  loop_control:
+    loop_var: host
+
+- name: Start the vm's
+  ansible.builtin.include_role:
+    name: lab
+    tasks_from: start_vm
+  loop: "{{ ocp_infra['hosts'] }}"
+  loop_control:
+    loop_var: host
+  vars:
+    lab_start_vm_name: "{{ host['name'] }}"
