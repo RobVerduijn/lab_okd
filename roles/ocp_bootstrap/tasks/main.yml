@@ -7,3 +7,4 @@
     loop_var: host
   vars:
     lab_start_vm_name: "{{ host['name'] }}"
+  when: host['name'] in init_vms

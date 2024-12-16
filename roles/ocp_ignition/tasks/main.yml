@@ -18,18 +18,36 @@
         owner: "{{ lookup('ansible.builtin.env', 'USER') }}"
         group: "{{ lookup('ansible.builtin.env', 'USER') }}"
 
-    - name: Create manifest files
-      ansible.builtin.command: openshift-install create manifests
-      args:
-        chdir: "{{ ocp_assetsdir }}"
-        creates: "{{ ocp_assetsdir }}/manifests"
+    - name: Manifest block
       when: not untill_install_config | default(false) | bool
+      block:
+        - name: Create manifest files
+          ansible.builtin.command: openshift-install create manifests
+          args:
+            chdir: "{{ ocp_assetsdir }}"
+            creates: "{{ ocp_assetsdir }}/manifests"
 
-    - name: Create ignition files
-      ansible.builtin.command: "openshift-install create ignition-configs"
-      args:
-        chdir: "{{ ocp_assetsdir }}"
-        creates: "{{ ocp_assetsdir }}/master.ign"
-      when:
-        - not untill_install_config | default(false) | bool
-        - not untill_manifests | default(false) | bool
+        - name: Calico block
+          when: ocp_ignition_networktype == 'Calico'
+          block:
+            - name: Download Calico manifests
+              ansible.builtin.unarchive:
+                src: "{{ ocp_ignition_calico_url }}"
+                dest: "{{ ocp_assetsdir }}/manifests"
+                extra_opts:
+                  - --strip-components=1
+                remote_src: true
+
+            - name: Download Calico manifests
+              ansible.builtin.copy:
+                src: 01-cr-installation.yaml
+                dest: "{{ ocp_assetsdir }}/manifests/01-cr-installation.yaml"
+                mode: "0644"
+
+        - name: Create ignition files
+          ansible.builtin.command: "openshift-install create ignition-configs"
+          args:
+            chdir: "{{ ocp_assetsdir }}"
+            creates: "{{ ocp_assetsdir }}/master.ign"
+          when:
+            - not untill_manifests | default(false) | bool

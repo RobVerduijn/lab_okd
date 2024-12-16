@@ -41,6 +41,7 @@
     setype: tftpdir_rw_t
   loop:
     - /var/lib/tftpboot/uefi
+    - /var/lib/tftpboot/boot
     - /var/lib/tftpboot/bios/pxelinux.cfg
   loop_control:
     loop_var: filepath

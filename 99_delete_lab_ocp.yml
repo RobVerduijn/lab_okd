@@ -47,5 +47,5 @@
 
     - name: Delete cluster dir
       ansible.builtin.include_role:
-        name: lab
+        name: ocp_binaries
         tasks_from: dir.yml

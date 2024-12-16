@@ -10,12 +10,14 @@
 - name: Set the init_svc if there is no svc vm
   ansible.builtin.set_fact:
     init_svc: "{{ ('svc' not in current_vms['list_vms']) }}"
+    init_vms: "{{ ('svc' not in current_vms['list_vms']) | ternary(init_vms + ['svc'], init_vms) }}"
 
 - name: Set the init_lb if there is no lb vm
   ansible.builtin.set_fact:
     init_lb: "{{ ('lb' not in current_vms['list_vms']) }}"
+    init_vms: "{{ ('lb' not in current_vms['list_vms']) | ternary(init_vms + ['lb'], init_vms) }}"
 
 - name: Set the init_cluster if there is a node missing
   ansible.builtin.set_fact:
-    init_cluster: >-
-      {{ (['master01', 'master02', 'master03', 'worker01', 'worker02', 'bootstrap'] | difference(current_vms['list_vms']) | length > 0 | bool) }}
+    init_cluster: "{{ (init_vms | difference(current_vms['list_vms']) | length > 0 | bool) }}"
+    init_vms: "{{ init_vms + ['bootstrap'] + prepare_masters + prepare_workers }}"

@@ -14,10 +14,6 @@
   ansible.builtin.set_fact:
     enable_bootstrap: "{{ hostvars['localhost']['init_cluster'] | default(false) }}"
 
-- name: Check the status of the vm's
-  ansible.builtin.include_tasks:
-    file: check_vm.yml
-
 - name: Check the init settings
   ansible.builtin.include_tasks:
     file: check_init.yml
@@ -25,3 +21,7 @@
 - name: Check init_vm
   ansible.builtin.include_tasks:
     file: check_init_vm.yml
+
+- name: Check the status of the vm's
+  ansible.builtin.include_tasks:
+    file: check_vm.yml

@@ -16,6 +16,10 @@
 
 - name: Add node vm's to init_vns
   ansible.builtin.set_fact:
-    init_vms: "{{ init_vms + ['master01', 'master02', 'master03', 'worker01', 'worker02', 'bootstrap'] }}"
+    init_vms: "{{ init_vms + ['bootstrap'] + prepare_masters + prepare_workers }}"
     clean_lab: true
   when: init_cluster | default(false) | bool
+
+- name: Make the init_vm unique items only
+  ansible.builtin.set_fact:
+    init_vms: "{{ init_vms | unique }}"

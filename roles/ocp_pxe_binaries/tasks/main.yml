@@ -2,7 +2,7 @@
   ansible.builtin.include_tasks:
     file: set_vars.yml
 
-- name: Determine file downloads
+- name: Download files
   ansible.builtin.include_tasks:
     file: download.yml
 

@@ -4,7 +4,7 @@
     - name: Download initramfs
       ansible.builtin.get_url:
         url: "{{ initramfs_url }}"
-        dest: "{{ ocp_pxe_binaries_tftpdir }}"
+        dest: "{{ ocp_pxe_binaries_tftpdir }}/{{ (initramfs_url | split('/'))[-1] }}"
         checksum: sha256:{{ initramfs_sha256 }}
         mode: "0644"
         owner: root
@@ -13,7 +13,7 @@
     - name: Download kernel
       ansible.builtin.get_url:
         url: "{{ kernel_url }}"
-        dest: "{{ ocp_pxe_binaries_tftpdir }}"
+        dest: "{{ ocp_pxe_binaries_tftpdir }}/{{ (kernel_url | split('/'))[-1] }}"
         checksum: sha256:{{ kernel_sha256 }}
         mode: "0644"
         owner: root
@@ -22,7 +22,7 @@
     - name: Download rootfs
       ansible.builtin.get_url:
         url: "{{ rootfs_url }}"
-        dest: "{{ ocp_pxe_binaries_webdir }}"
+        dest: "{{ ocp_pxe_binaries_webdir }}/{{ (rootfs_url | split('/'))[-1] }}"
         checksum: sha256:{{ rootfs_sha256 }}
         mode: "0644"
         owner: root

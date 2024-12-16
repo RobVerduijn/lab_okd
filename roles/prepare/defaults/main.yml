@@ -1,0 +1,8 @@
+prepare_masters:
+  - master01
+  - master02
+  - master03
+
+prepare_workers:
+  - worker01
+  - worker02

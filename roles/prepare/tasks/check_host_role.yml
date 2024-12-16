@@ -1,0 +1,4 @@
+- name: Add node to group
+  ansible.builtin.set_fact:
+    prepare_masters: "{{ (host['role'] == 'master') | ternary(prepare_masters | default([]) + [host['name']], prepare_masters | default([])) }}"
+    prepare_workers: "{{ (host['role'] == 'worker') | ternary(prepare_workers | default([]) + [host['name']], prepare_workers | default([])) }}"
