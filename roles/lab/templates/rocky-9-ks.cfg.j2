@@ -1,7 +1,7 @@
 {#- see https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/automatically_installing_rhel/kickstart-commands-and-options-reference_rhel-installer -#}
-{% set hostname = host['name'] %}
+{% set hostname = host %}
 {% set gw = lab_infra['network']['gateway'] %}
-{% set ip = host['ip'] %}
+{% set ip = hostvars[host]['ansible_host'] %}
 {% set nm = lab_infra['network']['netmask'] %}
 {% set dns = lab_infra['network']['gateway'] %}{# comma separated list of ip's, using gateway as dns because there is no local dns yet#}
 {% set domain = lab_infra['network']['domain'] %}

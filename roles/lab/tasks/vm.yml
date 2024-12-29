@@ -1,9 +1,7 @@
 - name: Delete vm
   ansible.builtin.include_tasks:
     file: delete_vm.yml
-  when: host['name'] in init_vms
 
 - name: Create vm
   ansible.builtin.include_tasks:
     file: create_vm.yml
-  when: host['name'] in init_vms

@@ -3,21 +3,21 @@
     ansible_user: root
 #    ansible_connection: ssh
   block:
-    - name: Create qcow2 image {{ host['name'] }}
+    - name: Create qcow2 image {{ host }}
       ansible.builtin.command: >-
         qemu-img create -f qcow2 -o preallocation=metadata
-        {{ lab_libvirt_storage_location }}/{{ host['name'] }}_{{ drive }}.qcow2
-        {{ lab_role[host['role']][drive] }}G
+        {{ lab_libvirt_storage_location }}/{{ host }}_{{ drive }}.qcow2
+        {{ lab_role[hostvars[host]['role']][drive] }}G
       loop:
         - sda
         - sdb
       loop_control:
         loop_var: drive
-      when: lab_role[host['role']][drive] is defined
+      when: lab_role[hostvars[host]['role']][drive] is defined
       args:
-        creates: "{{ lab_libvirt_storage_location }}/{{ host['name'] }}_{{ drive }}.qcow2"
+        creates: "{{ lab_libvirt_storage_location }}/{{ host }}_{{ drive }}.qcow2"
 
-    - name: Define vm {{ host['name'] }}
+    - name: Define vm {{ host }}
       community.libvirt.virt:
         command: define
         xml: "{{ lookup('template', 'vm.xml.j2') }}"
@@ -25,6 +25,6 @@
 - name: Start vm
   ansible.builtin.include_tasks:
     file: start_vm.yml
-  when: host['init'] == 'kickstart'
+  when: hostvars[host]['init'] == 'kickstart'
   vars:
-    lab_start_vm_name: "{{ host['name'] }}"
+    lab_start_vm_name: "{{ host }}"

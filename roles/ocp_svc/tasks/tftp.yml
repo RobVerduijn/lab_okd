@@ -27,6 +27,6 @@
 - name: Deploy pxe config files for host
   ansible.builtin.include_tasks:
     file: pxe_config_host.yml
-  loop: "{{ ocp_infra['hosts'] }}"
+  loop: "{{ groups['bootstrap'] + groups['masters'] + groups['workers'] }}"
   loop_control:
     loop_var: host

@@ -1,14 +1,12 @@
 # for details see https://github.com/okd-project/okd/releases
 # fedora core-os https://fedoraproject.org/coreos/download?stream=stable#arches
 # ocp_coreos_url: https://quay.io/repository/
-
 ocp_cluster_name: ocp_local
 ocp_networktype: OVNKubernetes
 # for details see https://github.com/okd-project/okd/releases
 # fedora core-os https://fedoraproject.org/coreos/download?stream=stable#arches
 # ocp_coreos_url: https://quay.io/repository/
-
-ocp_release: 4.16.0-okd-scos.0
+ocp_release: 4.17.0-okd-scos.0
 # openshift download locations
 # ocp_client_url: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/
 # ocp_coreos_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/
@@ -18,15 +16,10 @@ ocp_webserver_coreos_path: /network/repo/scos
 ocp_svc:
   dns_forwarders:
     - 10.0.0.254
-
 lab_libvirt_network:
   type: network
   source: lab_ocp
-
-
-ocp_ignition_worker_replicas: 0
-ocp_ignition_networktype: Calico
-
+# ocp_ignition_networktype: Calico
 ocp_infra:
   network:
     gateway: 10.0.0.254
@@ -40,66 +33,3 @@ ocp_infra:
       - 1.nl.pool.ntp.org
       - 2.nl.pool.ntp.org
       - 3.nl.pool.ntp.org
-
-  hosts:
-    - name: svc
-      ip: 10.0.0.1
-      mac: '52:54:00:00:00:01'
-      role: svc
-      init: kickstart
-      user: root
-      groups:
-        - ocp_local
-        - svc
-
-    - name: lb
-      mac: '52:54:00:00:00:02'
-      ip: 10.0.0.2
-      role: loadbalancer
-      init: kickstart
-      user: root
-      groups:
-        - ocp_local
-        - loadbalancer
-
-    - name: bootstrap
-      mac: '52:54:00:00:00:03'
-      ip: 10.0.0.3
-      role: bootstrap
-      init: ignition
-      user: core
-
-    - name: master01
-      mac: '52:54:00:00:00:04'
-      ip: 10.0.0.4
-      role: master
-      init: ignition
-      user: core
-
-    - name: master02
-      mac: '52:54:00:00:00:05'
-      ip: 10.0.0.5
-      role: master
-      init: ignition
-      user: core
-
-    - name: master03
-      mac: '52:54:00:00:00:06'
-      ip: 10.0.0.6
-      role: master
-      init: ignition
-      user: core
-
-    - name: worker01
-      mac: '52:54:00:00:00:07'
-      ip: 10.0.0.7
-      role: worker
-      init: ignition
-      user: core
-
-    - name: worker02
-      mac: '52:54:00:00:00:08'
-      ip: 10.0.0.8
-      role: worker
-      init: ignition
-      user: core

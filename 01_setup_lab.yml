@@ -4,11 +4,18 @@
   become: false
 
   tasks:
-    - name: Add localhost to all
+    - name: Assert that cluster is set
+      ansible.builtin.assert:
+        that:
+          cluster is defined
+        fail_msg: Cluster is not set, did you specify the inventory ?
+
+    - name: Add localhost to all and {{ cluster }}
       ansible.builtin.add_host:
         name: localhost
         groups:
           - all
+          - "{{ cluster }}"
 
     - name: Check init settings and vm's
       ansible.builtin.include_role:

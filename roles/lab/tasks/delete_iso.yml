@@ -1,9 +1,7 @@
 - name: Delete kickstart iso
   ansible.builtin.file:
-    path: "{{ lab_libvirt_storage_location }}/{{ host['name'] }}-ks.iso"
+    path: "{{ lab_libvirt_storage_location }}/{{ host }}-ks.iso"
     state: absent
   vars:
     ansible_user: root
-  when: host['role'] in ['svc', 'loadbalancer']
-
 #    ansible_connection: ssh

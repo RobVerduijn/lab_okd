@@ -24,23 +24,37 @@
       ansible.builtin.include_role:
         name: prepare
 
-    - name: Clean the cluster nodes from the known_hosts
-      ansible.builtin.include_role:
-        name: lab
-        tasks_from: clean
-      vars:
-        lab_infra: "{{ ocp_infra }}"
+- name: Wipe the nodes
+  hosts: bootstrap,masters,workers
+  gather_facts: false
+  become: true
 
-    - name: Start the cluster nodes
-      ansible.builtin.include_role:
-        name: lab
-        tasks_from: start_vm
-      loop: "{{ groups['bootstrap'] + groups['masters'] + groups['workers'] }}"
-      loop_control:
-        loop_var: host
-      vars:
-        lab_infra: "{{ ocp_infra }}"
-        lab_start_vm_name: "{{ host }}"
+  tasks:
+    - name: Only run when asked
+      when: wipe | default(false) | bool
+      block:
+        - name: Wipe sdb drive of the workers
+          ansible.builtin.shell: >-
+            dd if=/dev/zero of=/dev/sdb bs=1M count=100
+          when: inventory_hostname in groups['workers']
+          tags: skip_ansible_lint
+
+        - name: Wipe and reboot all nodes
+          ansible.builtin.shell: |
+            dd if=/dev/zero of=/dev/sda bs=1M count=1 && reboot -f
+          ignore_errors: true
+          async: 10
+          poll: 0
+          tags: skip_ansible_lint
+
+        - name: Clean the old ssh fingerprints from known_hosts
+          ansible.builtin.include_role:
+            name: lab
+            tasks_from: clean
+          vars:
+            lab_infra: "{{ ocp_infra }}"
+          run_once: true
+          tags: skip_ansible_lint
 
 - name: Ensure bootstrap is ready
   hosts: bootstrap
@@ -110,7 +124,8 @@
   connection: local
   become: false
   gather_facts: false
-
+  environment:
+    KUBECONFIG: "{{ ocp_assetsdir }}/auth/kubeconfig"
   tasks:
     - name: Wait for workers to be ready as nodes
       ansible.builtin.shell: |
@@ -123,5 +138,3 @@
       tags: skip_ansible_lint
       delay: 10
       retries: 120
-      environment:
-        KUBECONFIG: "{{ ocp_assetsdir }}/auth/kubeconfig"

@@ -1,25 +1,23 @@
-- name: Set init_vms
-  ansible.builtin.set_fact:
-    init_vms: []
-
 - name: Add svc to init_vms
   ansible.builtin.set_fact:
-    init_vms: "{{ init_vms + ['svc'] }}"
+    init_vms: "{{ init_vms + groups['svc'] }}"
     clean_lab: true
-  when: init_svc | default(false) | bool
+  when:
+    - init_svc | default(false) | bool
 
-- name: Add lb to init_vms
+- name: Add loadbalancer to init_vms
   ansible.builtin.set_fact:
-    init_vms: "{{ init_vms + ['lb'] }}"
+    init_vms: "{{ init_vms + groups['loadbalancer'] }}"
     clean_lab: true
-  when: init_lb | default(false) | bool
+  when:
+    - init_lb | default(false) | bool
 
 - name: Add node vm's to init_vns
   ansible.builtin.set_fact:
-    init_vms: "{{ init_vms + ['bootstrap'] + prepare_masters + prepare_workers }}"
+    init_vms: "{{ init_vms + groups['bootstrap'] + groups['masters'] + groups['workers'] }}"
     clean_lab: true
   when: init_cluster | default(false) | bool
 
-- name: Make the init_vm unique items only
+- name: Make the init_vms unique items only
   ansible.builtin.set_fact:
     init_vms: "{{ init_vms | unique }}"

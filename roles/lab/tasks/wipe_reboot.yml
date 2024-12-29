@@ -1,0 +1,9 @@
+- name: Run all these commands as root
+  vars:
+    ansible_user: root
+#    ansible_connection: ssh
+  block:
+    - name: Start vm {{ lab_start_vm_name }}
+      community.libvirt.virt:
+        name: "{{ lab_start_vm_name }}"
+        state: running

@@ -6,13 +6,15 @@ $TTL 8h
   2W ; expiry (2 weeks)
   1W ) ; minimum (1 week)
   IN NS {{ ansible_host }}.
-{% set loadbalancer_ip = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'loadbalancer') | map(attribute='ip'))[0] %}
+{% set loadbalancer_ip = hostvars[groups['loadbalancer'][0]]['ansible_host'] %}
 {{ (loadbalancer_ip | split('.'))[3] }} IN PTR api.okd.{{ ocp_infra['network']['domain'] }}. 
 {{ (loadbalancer_ip | split('.'))[3] }} IN PTR api-int.okd.{{ ocp_infra['network']['domain'] }}. 
-{% for host in ocp_infra['hosts'] %}
-{%   if host['role'] in ['svc','loadbalancer'] %}
-{{ (host['ip'] | split('.'))[3] }} IN PTR {{ host['name'] }}.{{ ocp_infra['network']['domain'] }}. 
+{% for host in (groups['all']) %}
+{%   if host == 'localhost' %}
+  {#- #}
+{%   elif host in groups['svc'] + groups['loadbalancer'] %}
+{{ (hostvars[host]['ansible_host'] | split('.'))[3] }} IN PTR {{ host }}.{{ ocp_infra['network']['domain'] }}. 
 {%   else %}
-{{ (host['ip'] | split('.'))[3] }} IN PTR {{ host['name'] }}.okd.{{ ocp_infra['network']['domain'] }}. 
+{{ (hostvars[host]['ansible_host'] | split('.'))[3] }} IN PTR {{ host }}.okd.{{ ocp_infra['network']['domain'] }}. 
 {%   endif %}
 {% endfor %}

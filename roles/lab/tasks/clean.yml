@@ -1,17 +1,21 @@
-- name: Clean names from known_hosts
-  ansible.builtin.lineinfile:
-    path: /home/rob/.ssh/known_hosts
-    state: absent
-    regexp: "^{{ host['name'] }}.*"
-  loop: "{{ lab_infra['hosts'] }}"
-  loop_control:
-    loop_var: host
+- name: Clean block
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Clean names from known_hosts
+      ansible.builtin.lineinfile:
+        path: /home/rob/.ssh/known_hosts
+        state: absent
+        regexp: "^{{ host }}.*"
+      loop: "{{ groups['all'] }}"
+      loop_control:
+        loop_var: host
 
-- name: Clean ip's from known_hosts
-  ansible.builtin.lineinfile:
-    path: /home/rob/.ssh/known_hosts
-    state: absent
-    regexp: "^{{ host['ip'] }}.*"
-  loop: "{{ lab_infra['hosts'] }}"
-  loop_control:
-    loop_var: host
+    - name: Clean ip's from known_hosts
+      ansible.builtin.lineinfile:
+        path: /home/rob/.ssh/known_hosts
+        state: absent
+        regexp: "^{{ hostvars[host]['ansible_host'] | default('0.0.0.0') }}.*"
+      loop: "{{ groups['all'] }}"
+      loop_control:
+        loop_var: host

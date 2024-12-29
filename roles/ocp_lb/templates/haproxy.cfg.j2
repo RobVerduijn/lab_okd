@@ -40,7 +40,7 @@ defaults
 #---------------------------------------------------------------------
 # round robin balancing for RHOCP Kubernetes API Server
 #---------------------------------------------------------------------
-{% set ip = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'loadbalancer') | map(attribute='ip'))[0] %}
+{% set ip = ansible_host %}
 frontend k8s_api
     bind {{ ip }}:6443
     mode tcp
@@ -50,16 +50,10 @@ backend k8s_api_backend
     balance roundrobin
     mode tcp
 {% if enable_bootstrap | bool %}
-{%   for host in ocp_infra['hosts'] %}
-{%     if host['role'] == 'bootstrap' %}
-    server {{ host['name'] }} {{ host['ip'] }}:6443 check
-{%     endif %}
-{%   endfor %}
+    server {{ groups['bootstrap'][0] }} {{ hostvars[groups['bootstrap'][0]]['ansible_host'] }}:6443 check
 {% endif %}
-{% for host in ocp_infra['hosts'] %}
-{%   if host['role'] == 'master' %}
-    server {{ host['name'] }} {{ host['ip'] }}:6443 check
-{%   endif %}
+{% for host in groups['masters'] %}
+    server {{ host }} {{ hostvars[host]['ansible_host'] }}:6443 check
 {% endfor %}
 
 # ---------------------------------------------------------------------
@@ -75,16 +69,10 @@ backend machine_config_backend
     balance roundrobin
     mode tcp
 {% if enable_bootstrap | bool %}
-{%   for host in ocp_infra['hosts'] %}
-{%     if host['role'] == 'bootstrap' %}
-    server {{ host['name'] }} {{ host['ip'] }}:22623 check
-{%     endif %}
-{%   endfor %}
+    server {{ groups['bootstrap'][0] }} {{ hostvars[groups['bootstrap'][0]]['ansible_host'] }}:22623 check
 {% endif %}
-{% for host in ocp_infra['hosts'] %}
-{%   if host['role'] == 'master' %}
-    server {{ host['name'] }} {{ host['ip'] }}:22623 check
-{%   endif %}
+{% for host in groups['masters'] %}
+    server {{ host }} {{ hostvars[host]['ansible_host'] }}:22623 check
 {% endfor %}
 
 # ---------------------------------------------------------------------
@@ -99,11 +87,15 @@ frontend tlsrouter
 backend ingress_secure_backend
     balance roundrobin
     mode tcp
-{% for host in ocp_infra['hosts'] %}
-{%   if host['role'] in ['master','worker'] %}
-    server {{ host['name'] }} {{ host['ip'] }}:443 check
-{%   endif %}
-{% endfor %}
+{% if groups['workers'] | length > 0 %}
+{%   for host in groups['workers'] %}
+    server {{ host }} {{ hostvars[host]['ansible_host'] }}:443 check
+{%   endfor %}
+{% else %}
+{%   for host in groups['masters'] %}
+    server {{ host }} {{ hostvars[host]['ansible_host'] }}:443 check
+{%   endfor %}
+{% endif %}
 
 # ---------------------------------------------------------------------
 # round robin balancing for RHOCP Ingress Insecure Port
@@ -117,11 +109,15 @@ frontend ingress_insecure
 backend ingress_insecure_backend
     balance roundrobin
     mode tcp
-{% for host in ocp_infra['hosts'] %}
-{%   if host['role'] in ['master','worker'] %}
-    server {{ host['name'] }} {{ host['ip'] }}:80 check
-{%   endif %}
-{% endfor %}
+{% if groups['workers'] | length > 1 %}
+{%   for host in groups['workers'] %}
+    server {{ host }} {{ hostvars[host]['ansible_host'] }}:80 check
+{%   endfor %}
+{% else %}
+{%   for host in groups['masters'] %}
+    server {{ host }} {{ hostvars[host]['ansible_host'] }}:80 check
+{%   endfor %}
+{% endif %}
 
 # ---------------------------------------------------------------------
 # Exposing HAProxy Statistic Page

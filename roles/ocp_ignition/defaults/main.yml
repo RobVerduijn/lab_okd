@@ -1,5 +1,3 @@
-ocp_ignition_worker_replicas: 2
-ocp_ignition_master_replicas: 3
 ocp_ignition_cluster_name: okd
 ocp_ignition_clusternetwork:
   - cidr: 10.128.0.0/14

@@ -1,8 +1,8 @@
-{% set hostname = host['name'] %}
-{% set role = host['role'] %}
+{% set hostname = host %}
 {% set ram = lab_role[role]['ram'] %}
 {% set ramunit = lab_role[role]['ramunit'] %}
 {% set vcpu = lab_role[role]['vcpu'] %}
+{% set mac = hostvars[host]['mac'] %}
 
 <domain type="kvm">
   <name>{{ hostname }}</name>
@@ -67,7 +67,7 @@
     </disk>
 {%  endif %}
 {% endfor %}
-{% if host['role'] in ['svc','loadbalancer'] %}
+{% if role in ['svc','loadbalancer'] %}
     <disk type="file" device="cdrom">
       <driver name="qemu" type="raw"/>
       <source file="{{ lab_libvirt_storage_location }}/{{ (lab_rocky_iso_url | ansible.builtin.split('/'))[-1] }}"/>
@@ -77,7 +77,7 @@
     </disk>
     <disk type="file" device="cdrom">
       <driver name="qemu" type="raw"/>
-      <source file="{{ lab_libvirt_storage_location }}/{{ hostname }}-ks.iso"/>
+      <source file="{{ lab_libvirt_storage_location }}/{{ host }}-ks.iso"/>
       <target dev="sdd" bus="scsi"/>
       <readonly/>
     </disk>
@@ -88,7 +88,7 @@
     </controller>
     <controller type="scsi" index="0" model="virtio-scsi"/>
     <interface type="{{ lab_libvirt_network['type'] }}">
-      <mac address="{{ host['mac'] }}"/>
+      <mac address="{{ mac }}"/>
       <source {{ lab_libvirt_network['type'] }}="{{ lab_libvirt_network['source'] }}"/>
       <model type="virtio"/>
       <boot order="3"/>

@@ -19,4 +19,3 @@
     initramfs_sha256: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['initramfs']['sha256'] }}"
     kernel_sha256: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['kernel']['sha256'] }}"
     rootfs_sha256: "{{ coreos_stream_metadata['architectures']['x86_64']['artifacts']['metal']['formats']['pxe']['rootfs']['sha256'] }}"
-

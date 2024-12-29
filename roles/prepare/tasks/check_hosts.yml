@@ -1,0 +1,16 @@
+- name: Assert that there is 1 loadbalancer
+  ansible.builtin.assert:
+    that:
+      - groups['loadbalancer'] | length == 1
+    fail_msg: This playbook can handle only 1 loadbalancer
+
+- name: Assert that there is 1 svc
+  ansible.builtin.assert:
+    that:
+      - groups['svc'] | length == 1
+    fail_msg: This playbook can handle only 1 svc
+
+- name: Assert that there is at least 1 master
+  ansible.builtin.assert:
+    that: groups['masters'] | length > 0
+    fail_msg: You need more that 0 masters

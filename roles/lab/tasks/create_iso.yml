@@ -1,7 +1,6 @@
 - name: Only run for svc and lb
   when:
-    - host['init'] == 'kickstart'
-    - host['name'] in init_vms
+    - hostvars[host]['init'] == 'kickstart'
   block:
     - name: Create tmp dir
       ansible.builtin.tempfile:
@@ -17,7 +16,7 @@
 
     - name: Create kickstart iso
       ansible.builtin.command: >-
-        genisoimage -output {{ lab_libvirt_storage_location }}/{{ host['name'] }}-ks.iso -volid OEMDRV -joliet -rock {{ ks_tempfile['path'] }}/ks.cfg
+        genisoimage -output {{ lab_libvirt_storage_location }}/{{ host }}-ks.iso -volid OEMDRV -joliet -rock {{ ks_tempfile['path'] }}/ks.cfg
       tags:
         - skip_ansible_lint
       vars:

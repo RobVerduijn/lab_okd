@@ -1,4 +1,4 @@
-{% set ip = (ocp_infra['hosts'] | selectattr('role', 'equalto', 'svc') | map(attribute='ip'))[0] %}
+{% set ip = ansible_host %}
 {% set nw = ocp_infra['network']['network'] %}
 {% set gw = ocp_infra['network']['gateway'] %}
 {% set nm = ocp_infra['network']['netmask'] %}
@@ -55,10 +55,10 @@ subnet {{ nw }} netmask {{ nm }} {
 
 }
 
-{% for host in ocp_infra['hosts'] %}
-host {{ host['name'] }}  {
-  fixed-address {{ host['ip'] }};
-  hardware ethernet {{ host['mac'] }};
+{% for host in (groups['bootstrap'] + groups['masters'] + groups['workers']) %}
+host {{ host }}  {
+  fixed-address {{ hostvars[host]['ansible_host'] }};
+  hardware ethernet {{ hostvars[host]['mac'] }};
   option domain-name "{{ domain }}";
 }
 

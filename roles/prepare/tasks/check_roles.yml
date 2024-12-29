@@ -9,15 +9,3 @@
   ansible.builtin.assert:
     that: prepare_masters | length> 0
     fail_msg: You need more that 0 masters
-
-- name: Reduce master list
-  ansible.builtin.set_fact:
-    prepare_masters: "{{ prepare_masters[0:ocp_ignition_master_replicas] }}"
-  when:
-    - ocp_ignition_master_replicas is defined
-
-- name: Reduce worker list
-  ansible.builtin.set_fact:
-    prepare_workers: "{{ (ocp_ignition_worker_replicas > 0) | ternary(prepare_workers[0:ocp_ignition_worker_replicas], []) }}"
-  when:
-    - ocp_ignition_worker_replicas is defined

@@ -1,15 +1,19 @@
 - name: Setup dns
   ansible.builtin.include_tasks:
     file: dns.yml
+  when: "'bind' in hostvars[inventory_hostname]['services']"
 
 - name: Setup dhcp
   ansible.builtin.include_tasks:
     file: dhcp.yml
+  when: "'dhcp' in hostvars[inventory_hostname]['services']"
 
 - name: Setup tftp
   ansible.builtin.include_tasks:
     file: tftp.yml
+  when: "'tftp' in hostvars[inventory_hostname]['services']"
 
 - name: Setup http
   ansible.builtin.include_tasks:
     file: http.yml
+  when: "'http' in hostvars[inventory_hostname]['services']"

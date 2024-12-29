@@ -5,11 +5,18 @@
   gather_facts: false
 
   tasks:
-    - name: Add localhost to all
+    - name: Assert that cluster is set
+      ansible.builtin.assert:
+        that:
+          cluster is defined
+        fail_msg: Cluster is not set, did you specify the inventory ?
+
+    - name: Add localhost to all and {{ cluster }}
       ansible.builtin.add_host:
         name: localhost
         groups:
           - all
+          - "{{ cluster }}"
         ansible_user: "{{ lookup('ansible.builtin.env', 'USER') }}"
         ansible_connection: local
 
@@ -37,14 +44,6 @@
     - name: Prepare the ocp installation
       ansible.builtin.include_role:
         name: ocp_ignition
-
-    - name: Add hosts to inventory
-      ansible.builtin.include_role:
-        name: lab
-        tasks_from: add_host
-      loop: "{{ ocp_infra['hosts'] }}"
-      loop_control:
-        loop_var: host
 
 - name: Download pxe binaries to svc
   hosts: svc

@@ -1,4 +1,8 @@
 collections/ansible_collections
 .vault_pass.gpg
-ocp_local
+ocp_local/*
 .openshift_install.log
+group_vars/ocp.yml
+inventory/ocp
+group_vars/not_all/install_config.yml
+group_vars/not_all/harbor.yml

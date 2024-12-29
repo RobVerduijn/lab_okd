@@ -3,11 +3,11 @@ baseDomain: {{ ocp_infra['network']['domain'] }}
 compute: 
 - hyperthreading: Enabled 
   name: worker
-  replicas: {{ ocp_ignition_worker_replicas }}
+  replicas: {{ groups[workers] | length }}
 controlPlane: 
   hyperthreading: Enabled 
   name: master
-  replicas: {{ ocp_ignition_master_replicas }}
+  replicas: {{ groups[masters] | length }}
 metadata:
   name: {{ ocp_ignition_cluster_name }} 
 networking:
@@ -36,5 +36,5 @@ imageDigestSources:
 {% endif %}
 {% if additionaltrustbundle is defined %}
 additionalTrustBundle: |
-  {{ additionaltrustbundle|indent(2) }}
+  {{ additionaltrustbundle | indent(2) }}
 {% endif %}

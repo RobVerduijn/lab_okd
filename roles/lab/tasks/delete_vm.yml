@@ -8,18 +8,18 @@
         command: list_vms
       register: current_vms
 
-    - name: As root delete old vm {{ host['name'] }}
-      when: host['name'] in current_vms['list_vms']
+    - name: As root delete old vm {{ host }}
+      when: host in current_vms['list_vms']
       block:
-        - name: Stop vm {{ host['name'] }}
+        - name: Stop vm {{ host }}
           community.libvirt.virt:
-            name: "{{ host['name'] }}"
+            name: "{{ host }}"
             state: destroyed
-          when: host['name'] in current_vms['list_vms']
+          when: host in current_vms['list_vms']
 
-        - name: Delete storage {{ host['name'] }}
+        - name: Delete storage {{ host }}
           ansible.builtin.file:
-            path: "{{ lab_libvirt_storage_location }}/{{ host['name'] }}_{{ drive }}.qcow2"
+            path: "{{ lab_libvirt_storage_location }}/{{ host }}_{{ drive }}.qcow2"
             state: absent
           loop:
             - sda
@@ -27,12 +27,12 @@
           loop_control:
             loop_var: drive
 
-        - name: Delete efi nvram {{ host['name'] }}
+        - name: Delete efi nvram {{ host }}
           ansible.builtin.file:
-            path: /var/lib/libvirt/qemu/nvram/{{ host['name'] }}_VARS.qcow2
+            path: /var/lib/libvirt/qemu/nvram/{{ host }}_VARS.qcow2
             state: absent
 
-        - name: Undefine vm {{ host['name'] }}
+        - name: Undefine vm {{ host }}
           community.libvirt.virt:
-            name: "{{ host['name'] }}"
+            name: "{{ host }}"
             command: undefine
