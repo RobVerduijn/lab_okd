@@ -7,3 +7,4 @@ inventory/ocp
 group_vars/not_all/install_config.yml
 group_vars/not_all/harbor.yml
 clusterconfig/ldap.yaml
+clusterconfig/cluster_admins.yaml
