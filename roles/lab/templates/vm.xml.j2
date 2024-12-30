@@ -1,4 +1,5 @@
 {% set hostname = host %}
+{% set role = hostvars[host]['role'] %}
 {% set ram = lab_role[role]['ram'] %}
 {% set ramunit = lab_role[role]['ramunit'] %}
 {% set vcpu = lab_role[role]['vcpu'] %}

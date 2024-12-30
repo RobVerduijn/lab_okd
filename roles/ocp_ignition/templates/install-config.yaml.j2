@@ -3,11 +3,11 @@ baseDomain: {{ ocp_infra['network']['domain'] }}
 compute: 
 - hyperthreading: Enabled 
   name: worker
-  replicas: {{ groups[workers] | length }}
+  replicas: {{ groups['workers'] | length }}
 controlPlane: 
   hyperthreading: Enabled 
   name: master
-  replicas: {{ groups[masters] | length }}
+  replicas: {{ groups['masters'] | length }}
 metadata:
   name: {{ ocp_ignition_cluster_name }} 
 networking:

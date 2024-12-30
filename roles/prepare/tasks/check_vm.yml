@@ -7,21 +7,16 @@
   delegate_to: localhost
 #    ansible_connection: ssh
 
-- name: Set the init_svc if there is no svc vm
+- name: Add host to init_vms
   ansible.builtin.set_fact:
-    init_svc: "{{ (groups['svc'][0] not in current_vms['list_vms']) }}"
-    init_vms: "{{ (groups['svc'][0] not in current_vms['list_vms']) | ternary(init_vms + groups['svc'], init_vms) }}"
+    init_vms: "{{ host }}"
+  loop: "{{ groups['all'] }}"
+  loop_control:
+    loop_var: host
+  when:
+    - hostvars[host]['virtual'] | default(false)
+    - host not in current_vms
 
-- name: Set the init_lb if there is no lb vm
-  ansible.builtin.set_fact:
-    init_lb: "{{ (groups['loadbalancer'][0] not in current_vms['list_vms']) }}"
-    init_vms: "{{ (groups['loadbalancer'][0] not in current_vms['list_vms']) | ternary(init_vms + groups['loadbalancer'], init_vms) }}"
-
-- name: Set the init_vms if there is a node missing
-  ansible.builtin.set_fact:
-    init_cluster: true
-    init_vms: "{{ init_vms + groups['bootstrap'] + groups['masters'] + groups['workers'] }}"
-  when: (groups['bootstrap'] + groups['masters'] + groups['workers']) | difference(current_vms['list_vms']) | length > 0
 
 - name: Make the init_vms unique items only
   ansible.builtin.set_fact:

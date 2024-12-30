@@ -1,0 +1,28 @@
+- name: Setup ocp configuration
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: false
+
+  tasks:
+    - name: Assert that cluster is set
+      ansible.builtin.assert:
+        that:
+          cluster is defined
+        fail_msg: Cluster is not set, did you specify the inventory ?
+
+    - name: Add localhost to all and {{ cluster }}
+      ansible.builtin.add_host:
+        name: localhost
+        groups:
+          - all
+          - "{{ cluster }}"
+        ansible_user: "{{ lookup('ansible.builtin.env', 'USER') }}"
+        ansible_connection: local
+
+    - name: Apply configs
+      ansible.builtin.shell: |-
+        oc apply -f {{ playbook_dir }}/clusterconfig/99-master-custom-chrony.yaml
+      environment:
+        KUBECONFIG: "{{ ocp_assetsdir }}/auth/kubeconfig"
+      tags: skip_ansible_lint

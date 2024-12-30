@@ -21,6 +21,10 @@
       ansible.builtin.include_role:
         name: prepare
 
+    - name: Debug
+      ansible.builtin.debug:
+        var: init_vms
+
     - name: Warn about cluster init
       when: init_cluster | default(false) | bool
       ansible.builtin.pause:
@@ -47,9 +51,10 @@
 
     - name: Start svc vm
       community.libvirt.virt:
-        name: "svc"
+        name: "{{ groupvars['svc'][0] }}"
         state: running
       delegate_to: localhost
+      when: hostvars[groups['svc'][0]]['virtual']
 
     - name: Wait for system to become reachable
       ansible.builtin.wait_for_connection:
@@ -65,7 +70,6 @@
   hosts: loadbalancer
   gather_facts: false
   become: false
-  remote_user: root
 
   tasks:
     - name: Check init settings and vm's
@@ -74,12 +78,16 @@
 
     - name: Start svc vm
       community.libvirt.virt:
-        name: "svc"
+        name: "{{ groups['loadbalancer'][0] }}"
         state: running
       delegate_to: localhost
+      when: hostvars[groups['loadbalancer'][0]]['virtual']
 
     - name: Wait for system to become reachable
       ansible.builtin.wait_for_connection:
+
+    - name: Gather facts
+      ansible.builtin.setup:
 
     - name: Setup loadbalancer
       ansible.builtin.include_role:

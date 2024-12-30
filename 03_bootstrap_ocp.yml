@@ -38,19 +38,74 @@
       loop: "{{ groups['bootstrap'] + groups['masters'] + groups['workers'] }}"
       loop_control:
         loop_var: host
+      when: hostvars[host]['virtual']
       vars:
         lab_infra: "{{ ocp_infra }}"
         lab_start_vm_name: "{{ host }}"
 
-- name: Ensure bootstrap is ready
+- name: Ensure bootstrap is started
   hosts: bootstrap
   gather_facts: false
 
   tasks:
     - name: Ensure ssh pub key is set
       ansible.builtin.set_fact:
-        ocp_ignition_core_ssh_key: "{{ ocp_ignition_core_ssh_key | default(lookup('file', lookup('ansible.builtin.env', 'HOME') + '/.ssh/id_rsa.pub')) }}"
+        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | default(lookup('ansible.builtin.env', 'HOME' + '/.ssh/id_rsa')) }}"
+      delegate_to: localhost
 
+    - name: Wait for the bootstrap to be up and running
+      ansible.builtin.wait_for_connection:
+        sleep: 10
+
+- name: Wipe the nodes
+  hosts: bootstrap,masters,workers
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Ensure ssh pub key is set
+      ansible.builtin.set_fact:
+        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | default(lookup('ansible.builtin.env', 'HOME' + '/.ssh/id_rsa')) }}"
+      delegate_to: localhost
+
+    - name: Only run wipe when asked
+      when: wipe | default(false) | bool
+      block:
+        - name: Wipe sdb drive of the workers
+          ansible.builtin.shell: >-
+            dd if=/dev/zero of=/dev/sdb bs=1M count=100
+          when: inventory_hostname in groups['workers']
+          tags: skip_ansible_lint
+
+        - name: Wipe and reboot all nodes
+          ansible.builtin.shell: |
+            dd if=/dev/zero of=/dev/sda bs=1M count=1 && reboot -f
+          ignore_errors: true
+          async: 10
+          poll: 0
+          tags: skip_ansible_lint
+
+        - name: Clean the old ssh fingerprints from known_hosts
+          ansible.builtin.include_role:
+            name: lab
+            tasks_from: clean
+          vars:
+            lab_infra: "{{ ocp_infra }}"
+          run_once: true
+          tags: skip_ansible_lint
+
+    - name: Clean the cluster nodes from the known_hosts
+      ansible.builtin.include_role:
+        name: lab
+        tasks_from: clean
+      vars:
+        lab_infra: "{{ ocp_infra }}"
+
+- name: Ensure bootstrap is ready
+  hosts: bootstrap
+  gather_facts: false
+
+  tasks:
     - name: Wait for the bootstrap to be up and running
       ansible.builtin.wait_for_connection:
         sleep: 10
@@ -70,7 +125,8 @@
   tasks:
     - name: Ensure ssh pub key is set
       ansible.builtin.set_fact:
-        ocp_ignition_core_ssh_key: "{{ ocp_ignition_core_ssh_key | default(lookup('file', lookup('ansible.builtin.env', 'HOME') + '/.ssh/id_rsa.pub')) }}"
+        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | default(lookup('ansible.builtin.env', 'HOME' + '/.ssh/id_rsa')) }}"
+      delegate_to: localhost
 
     - name: Wait for the master node to be up and running
       ansible.builtin.wait_for_connection:
@@ -91,7 +147,8 @@
   tasks:
     - name: Ensure ssh pub key is set
       ansible.builtin.set_fact:
-        ocp_ignition_core_ssh_key: "{{ ocp_ignition_core_ssh_key | default(lookup('file', lookup('ansible.builtin.env', 'HOME') + '/.ssh/id_rsa.pub')) }}"
+        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | default(lookup('ansible.builtin.env', 'HOME' + '/.ssh/id_rsa')) }}"
+      delegate_to: localhost
 
     - name: Wait for the node to be up and running
       ansible.builtin.wait_for_connection:
@@ -112,6 +169,10 @@
   gather_facts: false
 
   tasks:
+    - name: Ensure ssh key is set
+      ansible.builtin.set_fact:
+        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | default(lookup('file', lookup('ansible.builtin.env', 'HOME') + '/.ssh/id_rsa')) }}"
+
     - name: Wait for workers to be ready as nodes
       ansible.builtin.shell: |
         oc get csr -o json | jq -r '.items[] | select(.status.certificate == null) | .metadata.name' | xargs -I % oc adm certificate approve % > /dev/null
