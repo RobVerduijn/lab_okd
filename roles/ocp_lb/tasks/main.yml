@@ -1,37 +1,23 @@
-- name: Ensure the package facts are loaded
-  ansible.builtin.package_facts:
-  when:
-    - ansible_facts['packages'] is not defined
-    - ansible_distribution == 'Rocky'
+- name: Only run on os family RedHat
+  when: ansible_os_family == 'RedHat'
+  block:
+    - name: Ensure the package facts are loaded
+      ansible.builtin.package_facts:
+      when:
+        - ansible_facts['packages'] is not defined
 
-- name: Ensure required packages are installed
-  ansible.builtin.dnf:
-    name: "{{ ocp_lb_packages }}"
-    state: present
-  when:
-    - ansible_distribution == 'Rocky'
-    - ocp_lb_packages | ansible.builtin.difference(ansible_facts['packages'].keys()) | length > 0
+    - name: Ensure required packages are installed
+      ansible.builtin.dnf:
+        name: "{{ ocp_lb_packages }}"
+        state: present
+      when:
+        - ocp_lb_packages | ansible.builtin.difference(ansible_facts['packages'].keys()) | length > 0
 
-- name: Set haproxy_connect_any flag
-  ansible.posix.seboolean:
-    name: haproxy_connect_any
-    state: true
-    persistent: true
-  when: ansible_distribution == 'Rocky'
-
-- name: Ensure haproxy.cfg configuration is present
-  ansible.builtin.template:
-    src: haproxy.cfg.j2
-    dest: /etc/haproxy/haproxy.cfg
-    mode: "0644"
-  notify:
-    - Restart haproxy
-
-- name: Ensure ha-proxy is enabled and started
-  ansible.builtin.systemd_service:
-    name: haproxy
-    enabled: true
-    state: started
+    - name: Set haproxy_connect_any flag
+      ansible.posix.seboolean:
+        name: haproxy_connect_any
+        state: true
+        persistent: true
 
 - name: Open firewall port for api
   ansible.posix.firewalld:
@@ -40,7 +26,6 @@
     permanent: true
     immediate: true
     offline: true
-  when: ansible_distribution == 'Rocky'
 
 - name: Open firewall port for machineconfig
   ansible.posix.firewalld:
@@ -49,7 +34,6 @@
     permanent: true
     immediate: true
     offline: true
-  when: ansible_distribution == 'Rocky'
 
 - name: Open firewall port for haproxy stats
   ansible.posix.firewalld:
@@ -58,7 +42,6 @@
     permanent: true
     immediate: true
     offline: true
-  when: ansible_distribution == 'Rocky'
 
 - name: Open firewall for http
   ansible.posix.firewalld:
@@ -69,7 +52,6 @@
     offline: true
   notify:
     - Reload firewalld
-  when: ansible_distribution == 'Rocky'
 
 - name: Open firewall for https
   ansible.posix.firewalld:
@@ -80,4 +62,13 @@
     offline: true
   notify:
     - Reload firewalld
-  when: ansible_distribution == 'Rocky'
+
+- name: Ensure haproxy.cfg configuration is present
+  ansible.builtin.include_tasks:
+    file: haproxy_cfg.yml
+
+- name: Ensure ha-proxy is enabled and started
+  ansible.builtin.systemd_service:
+    name: haproxy
+    enabled: true
+    state: started
