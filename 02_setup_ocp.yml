@@ -5,6 +5,12 @@
   gather_facts: false
 
   tasks:
+    - name: Fail if not set properly
+      ansible.builtin.assert:
+        that:
+          - warning is not defined
+        fail_msg: You did not specify the correct inventory subdir.
+
     - name: Assert that cluster is set
       ansible.builtin.assert:
         that:
@@ -70,6 +76,15 @@
       ansible.builtin.include_role:
         name: ocp_pxe_binaries
 
-#      vars:
-#        ocp_binaries_assetsdir: hostvars['localhost']['ocp_binaries_assetsdir']
-#        ocp_binaries_webdir: hostvars['localhost']['ocp_binaries_webdir']
+- name: Configure loadbalancer host
+  hosts: loadbalancer
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: Setup loadbalancer
+      ansible.builtin.include_role:
+        name: ocp_lb
+        tasks_from: haproxy_cfg
+      vars:
+        ocp_lb_enable_bootstrap: true

@@ -3,4 +3,3 @@ my_preferred_packages:
   - mlocate
   - vim
   - yum-utils
-  

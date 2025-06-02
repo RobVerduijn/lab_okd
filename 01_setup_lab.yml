@@ -4,10 +4,16 @@
   become: false
 
   tasks:
+    - name: Fail if not set properly
+      ansible.builtin.assert:
+        that:
+          - warning is not defined
+        fail_msg: You did not specify the correct inventory subdir.
+
     - name: Assert that cluster is set
       ansible.builtin.assert:
         that:
-          cluster is defined
+          - cluster is defined
         fail_msg: Cluster is not set, did you specify the inventory ?
 
     - name: Add localhost to all and {{ cluster }}
@@ -92,6 +98,8 @@
     - name: Setup loadbalancer
       ansible.builtin.include_role:
         name: ocp_lb
+      vars:
+        ocp_lb_enable_bootstrap: true
 
 - name: Apply personal preferences
   hosts: loadbalancer,svc
@@ -104,28 +112,3 @@
       ansible.builtin.include_role:
         name: lab
         tasks_from: personal
-
-#    - name: The status of mirror installation is
-#      ansible.builtin.debug:
-#        msg: Mirroring of the registry will {{ ocp_local_registry | default(false) | ternary("", "NOT!!") }} be performed
-
-#    - name: Install ocp client
-#      ansible.builtin.include_role:
-#        name: ocp_client
-#
-#    - name: Setup pxe content
-#      ansible.builtin.include_role:
-#        name: ocp_pxe_content
-#
-#    - name: Create ocp image mirror script and secret
-#      ansible.builtin.include_role:
-#        name: ocp_mirror
-#      when: ocp_local_registry | default(false)
-#
-#    - name: Create ocp ignition files
-#      ansible.builtin.include_role:
-#        name: ocp_ignition_files
-#
-#    - name: Create virtual machines
-#      ansible.builtin.include_role:
-#        name: ocp_vm

@@ -5,6 +5,16 @@
   gather_facts: false
 
   tasks:
+    - name: Ensure ssh pub key is set
+      ansible.builtin.set_fact:
+        ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'HOME') + '/.ssh/id_rsa' }}"
+
+    - name: Fail if not set properly
+      ansible.builtin.assert:
+        that:
+          - warning is not defined
+        fail_msg: You did not specify the correct inventory subdir.
+
     - name: Assert that cluster is set
       ansible.builtin.assert:
         that:
@@ -50,7 +60,7 @@
   tasks:
     - name: Ensure ssh pub key is set
       ansible.builtin.set_fact:
-        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | default(lookup('ansible.builtin.env', 'HOME' + '/.ssh/id_rsa')) }}"
+        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | default(lookup('ansible.builtin.env', 'HOME') + '/.ssh/id_rsa') }}"
       delegate_to: localhost
 
     - name: Wait for the bootstrap to be up and running
@@ -65,7 +75,7 @@
   tasks:
     - name: Ensure ssh pub key is set
       ansible.builtin.set_fact:
-        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | default(lookup('ansible.builtin.env', 'HOME' + '/.ssh/id_rsa')) }}"
+        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | default(lookup('ansible.builtin.env', 'HOME') + '/.ssh/id_rsa') }}"
       delegate_to: localhost
 
     - name: Only run wipe when asked
@@ -73,13 +83,13 @@
       block:
         - name: Wipe sdb drive of the workers
           ansible.builtin.shell: >-
-            dd if=/dev/zero of=/dev/sdb bs=1M count=100
+            dd if=/dev/zero of=/dev/{{ storage_dev | default('sdb') }} bs=1M count=100
           when: inventory_hostname in groups['workers']
           tags: skip_ansible_lint
 
         - name: Wipe and reboot all nodes
           ansible.builtin.shell: |
-            dd if=/dev/zero of=/dev/sda bs=1M count=1 && reboot -f
+            dd if=/dev/zero of=/dev/{{ system_dev | default('sda') }} bs=1M count=1 && reboot -f
           ignore_errors: true
           async: 10
           poll: 0
@@ -94,13 +104,6 @@
           run_once: true
           tags: skip_ansible_lint
 
-    - name: Clean the cluster nodes from the known_hosts
-      ansible.builtin.include_role:
-        name: lab
-        tasks_from: clean
-      vars:
-        lab_infra: "{{ ocp_infra }}"
-
 - name: Ensure bootstrap is ready
   hosts: bootstrap
   gather_facts: false
@@ -109,12 +112,6 @@
     - name: Wait for the bootstrap to be up and running
       ansible.builtin.wait_for_connection:
         sleep: 10
-
-    - name: Check if the bootstrap has pivotted to scos
-      ansible.builtin.slurp:
-        src: /etc/redhat-release
-      register: coreos_release
-      until: coreos_release['content'] | b64decode | regex_search('CentOS Stream CoreOS') == "CentOS Stream CoreOS"
       delay: 10
       retries: 60
 
@@ -123,20 +120,9 @@
   gather_facts: false
 
   tasks:
-    - name: Ensure ssh pub key is set
-      ansible.builtin.set_fact:
-        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | default(lookup('ansible.builtin.env', 'HOME' + '/.ssh/id_rsa')) }}"
-      delegate_to: localhost
-
     - name: Wait for the master node to be up and running
       ansible.builtin.wait_for_connection:
         sleep: 10
-
-    - name: Check if the master node has pivotted to scos
-      ansible.builtin.slurp:
-        src: /etc/redhat-release
-      register: coreos_release
-      until: coreos_release['content'] | b64decode | regex_search('CentOS Stream CoreOS') == "CentOS Stream CoreOS"
       delay: 10
       retries: 60
 
@@ -145,34 +131,19 @@
   gather_facts: false
 
   tasks:
-    - name: Ensure ssh pub key is set
-      ansible.builtin.set_fact:
-        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | default(lookup('ansible.builtin.env', 'HOME' + '/.ssh/id_rsa')) }}"
-      delegate_to: localhost
-
     - name: Wait for the node to be up and running
       ansible.builtin.wait_for_connection:
         sleep: 10
-
-    - name: Check if the node has pivotted to scos
-      ansible.builtin.slurp:
-        src: /etc/redhat-release
-      register: coreos_release
-      until: coreos_release['content'] | b64decode | regex_search('CentOS Stream CoreOS') == "CentOS Stream CoreOS"
       delay: 10
       retries: 120
 
-- name: Setup ocp configuration
+- name: Wait for nodes to be ready
   hosts: localhost
   connection: local
   become: false
   gather_facts: false
 
   tasks:
-    - name: Ensure ssh key is set
-      ansible.builtin.set_fact:
-        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | default(lookup('file', lookup('ansible.builtin.env', 'HOME') + '/.ssh/id_rsa')) }}"
-
     - name: Wait for workers to be ready as nodes
       ansible.builtin.shell: |
         oc get csr -o json | jq -r '.items[] | select(.status.certificate == null) | .metadata.name' | xargs -I % oc adm certificate approve % > /dev/null
@@ -186,3 +157,43 @@
       retries: 120
       environment:
         KUBECONFIG: "{{ ocp_assetsdir }}/auth/kubeconfig"
+
+    - name: Wait for install to be done
+      ansible.builtin.shell: "{{ ocp_assetsdir }}/openshift-install wait-for install-complete"
+      register: openshift_install
+      args:
+        chdir: "{{ ocp_assetsdir }}"
+      tags: skip_ansible_lint
+      environment:
+        KUBECONFIG: "{{ ocp_assetsdir }}/auth/kubeconfig"
+
+    - name: Results
+      ansible.builtin.debug:
+        var: openshift_install
+
+- name: Configure the haproxy system
+  hosts: loadbalancer
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: Ensure bootstrap is set
+      ansible.builtin.set_fact:
+        enable_bootstrap: "{{ enable_bootstrap | default(false) }}"
+
+    - name: Show what bootstrap is set to
+      ansible.builtin.debug:
+        msg: "enable_bootstrap is set to {{ enable_bootstrap | string }}"
+
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+
+    - name: Include variables for haproxy
+      ansible.builtin.group_by:
+        key: haproxy
+
+    - name: Configure haproxy
+      ansible.builtin.include_role:
+        name: ocp_lb
+      vars:
+        ocp_lb_enable_bootstrap: "{{ enable_bootstrap }}"

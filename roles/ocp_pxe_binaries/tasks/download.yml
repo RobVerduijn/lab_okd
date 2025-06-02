@@ -1,4 +1,3 @@
-
 - name: Download initramfs
   ansible.builtin.get_url:
     url: "{{ initramfs_url }}"

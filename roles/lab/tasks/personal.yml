@@ -1,25 +1,28 @@
-- name: Ensure the package facts are loaded
-  ansible.builtin.package_facts:
-  when: ansible_facts['packages'] is not defined
+- name: Only run on redhat os family
+  when: ansible_os_family == 'RedHat'
+  block:
+    - name: Ensure the package facts are loaded
+      ansible.builtin.package_facts:
+      when: ansible_facts['packages'] is not defined
 
-- name: Install the packages that I like
-  ansible.builtin.dnf:
-    name: "{{ my_preferred_packages }}"
-    state: present
-  when: "my_preferred_packages | difference(ansible_facts['packages']) | length > 0"
+    - name: Install the packages that I like
+      ansible.builtin.dnf:
+        name: "{{ my_preferred_packages }}"
+        state: present
+      when: "my_preferred_packages | difference(ansible_facts['packages']) | length > 0"
 
-- name: Update systems
-  ansible.builtin.dnf:
-    name: '*'
-    state: latest
-    update_only: true
+    - name: Update systems
+      ansible.builtin.dnf:
+        name: '*'
+        state: latest
+        update_only: true
 
-- name: Check if system needs restarting
-  ansible.builtin.command: needs-restarting -r
-  register: needs_restarting
-  changed_when: false | bool
-  failed_when: needs_restarting['rc'] > 1
+    - name: Check if system needs restarting
+      ansible.builtin.command: needs-restarting -r
+      register: needs_restarting
+      changed_when: false | bool
+      failed_when: needs_restarting['rc'] > 1
 
-- name: Restart machine {{ inventory_hostname }}
-  ansible.builtin.reboot:
-  when: needs_restarting['rc'] | default(0) == 1
+    - name: Restart machine {{ inventory_hostname }}
+      ansible.builtin.reboot:
+      when: needs_restarting['rc'] | default(0) == 1

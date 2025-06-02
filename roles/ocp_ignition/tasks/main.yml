@@ -22,7 +22,7 @@
       when: not untill_install_config | default(false) | bool
       block:
         - name: Create manifest files
-          ansible.builtin.command: openshift-install create manifests
+          ansible.builtin.command: "{{ ocp_assetsdir }}/openshift-install create manifests"
           args:
             chdir: "{{ ocp_assetsdir }}"
             creates: "{{ ocp_assetsdir }}/manifests"
@@ -37,15 +37,40 @@
                 extra_opts:
                   - --strip-components=1
                 remote_src: true
+                owner: "{{ lookup('ansible.builtin.env', 'USER') }}"
+                group: "{{ lookup('ansible.builtin.env', 'USER') }}"
 
-            - name: Download Calico manifests
-              ansible.builtin.copy:
-                src: 01-cr-installation.yaml
-                dest: "{{ ocp_assetsdir }}/manifests/01-cr-installation.yaml"
+            - name: Ensure registry is quay.io
+              ansible.builtin.template:
+                src: 03-cr-installation.yaml.j2
+                dest: "{{ ocp_assetsdir }}/manifests/{{
+                  (ocp_ignition_calico_version is ansible.builtin.version('3.29.4', '>=', version_type='semver')) |
+                    ternary('03', '01') }}-cr-installation.yaml"
                 mode: "0644"
+                owner: "{{ lookup('ansible.builtin.env', 'USER') }}"
+                group: "{{ lookup('ansible.builtin.env', 'USER') }}"
+
+            - name: Calico release >= 3.30.0
+              when: ocp_ignition_calico_version is ansible.builtin.version('3.30.0', '>=', version_type='semver')
+              block:
+                - name: Ensure the services endpoint is set
+                  ansible.builtin.template:
+                    src: 01-configmap-kubernetes-services-endpoint.yaml.j2
+                    dest: "{{ ocp_assetsdir }}/manifests/01-configmap-kubernetes-services-endpoint.yaml"
+                    mode: "0640"
+                    owner: "{{ lookup('ansible.builtin.env', 'USER') }}"
+                    group: "{{ lookup('ansible.builtin.env', 'USER') }}"
+
+                - name: Ensure the dnsconfig is set
+                  ansible.builtin.template:
+                    src: 02-tigera-operator.yaml.j2
+                    dest: "{{ ocp_assetsdir }}/manifests/02-tigera-operator.yaml"
+                    mode: "0640"
+                    owner: "{{ lookup('ansible.builtin.env', 'USER') }}"
+                    group: "{{ lookup('ansible.builtin.env', 'USER') }}"
 
         - name: Create ignition files
-          ansible.builtin.command: "openshift-install create ignition-configs"
+          ansible.builtin.command: "{{ ocp_assetsdir }}/openshift-install create ignition-configs"
           args:
             chdir: "{{ ocp_assetsdir }}"
             creates: "{{ ocp_assetsdir }}/master.ign"

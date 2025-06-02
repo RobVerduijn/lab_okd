@@ -9,14 +9,13 @@
 
 - name: Add host to init_vms
   ansible.builtin.set_fact:
-    init_vms: "{{ host }}"
+    init_vms: "{{ init_vms + [host] }}"
   loop: "{{ groups['all'] }}"
   loop_control:
     loop_var: host
   when:
     - hostvars[host]['virtual'] | default(false)
     - host not in current_vms
-
 
 - name: Make the init_vms unique items only
   ansible.builtin.set_fact:

@@ -50,9 +50,9 @@ digraph switches {
   sw3 [ label="Switch 3\n192.168.1.103" ];
   sw4 [ label="Switch 4\n192.168.1.104" ];
   sw1 -> sw2;
-  sw1 -- sw3;
-  sw1 -- sw4;
-  sw3 -- sw4;
-  sw2 -- sw3;
+  sw1 -> sw3;
+  sw1 -> sw4;
+  sw3 -> sw4;
+  sw2 -> sw3;
 }
 ```

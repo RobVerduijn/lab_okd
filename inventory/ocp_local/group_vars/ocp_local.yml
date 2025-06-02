@@ -20,6 +20,7 @@ lab_libvirt_network:
   type: network
   source: lab_ocp
 # ocp_ignition_networktype: Calico
+# ocp_ignition_calico_version: 3.30.1
 ocp_infra:
   network:
     gateway: 10.0.0.254

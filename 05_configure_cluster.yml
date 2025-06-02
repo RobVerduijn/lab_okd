@@ -5,6 +5,12 @@
   gather_facts: false
 
   tasks:
+    - name: Fail if not set properly
+      ansible.builtin.assert:
+        that:
+          - warning is not defined
+        fail_msg: You did not specify the correct inventory subdir.
+
     - name: Assert that cluster is set
       ansible.builtin.assert:
         that:
@@ -22,7 +28,10 @@
 
     - name: Apply configs
       ansible.builtin.shell: |-
-        oc apply -f {{ playbook_dir }}/clusterconfig/99-master-custom-chrony.yaml
+        oc apply -f {{ playbook_dir }}/clusterconfig/02-ldap.yaml
+        oc apply -f {{ playbook_dir }}/clusterconfig/03-cluster_admins.yaml
+        oc apply -f {{ playbook_dir }}/clusterconfig/04-synology-csi-scc.yaml
+        # oc apply -f {{ playbook_dir }}/clusterconfig/99-master-custom-chrony.yaml
       environment:
         KUBECONFIG: "{{ ocp_assetsdir }}/auth/kubeconfig"
       tags: skip_ansible_lint

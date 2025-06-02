@@ -1,8 +1,15 @@
-- name: Delete ocp directory
-  ansible.builtin.file:
-    path: "{{ ocp_assetsdir }}"
-    state: absent
+- name: Ensure dir is absent
   when: init_cluster | default(false) | bool
+  block:
+    - name: Delete ocp directory
+      ansible.builtin.file:
+        path: "{{ ocp_assetsdir }}"
+        state: absent
+
+    - name: Delete ocp directory
+      ansible.builtin.file:
+        path: "{{ ocp_assetsdir }}"
+        state: absent
 
 - name: Create ocp directory
   ansible.builtin.file:

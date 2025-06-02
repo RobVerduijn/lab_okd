@@ -23,7 +23,7 @@ networking:
 {% endfor %}
 platform:
   none: {} 
-pullSecret: '{{ ocp_ignition_pullsecret }}' 
+pullSecret: '{{ ocp_ignition_pullsecret }}'
 sshKey: '{{ ocp_ignition_core_ssh_key }}'
 {% if ocp_local_registry is defined %}
 imageDigestSources:

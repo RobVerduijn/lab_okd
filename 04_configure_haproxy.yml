@@ -1,5 +1,5 @@
 - name: Configure the haproxy system
-  hosts: haproxy
+  hosts: loadbalancer
   gather_facts: true
   become: true
 
@@ -10,9 +10,7 @@
 
     - name: Show what bootstrap is set to
       ansible.builtin.debug:
-        that:
-          - enable_bootstrap
-        success_msg: "enable_bootstrap is set to {{ enable_bootstrap | string }}"
+        msg: "enable_bootstrap is set to {{ enable_bootstrap | string }}"
 
     - name: Gather package facts
       ansible.builtin.package_facts:
@@ -23,4 +21,6 @@
 
     - name: Configure haproxy
       ansible.builtin.include_role:
-        name: ocp_haproxy
+        name: ocp_lb
+      vars:
+        ocp_lb_enable_bootstrap: "{{ enable_bootstrap }}"
