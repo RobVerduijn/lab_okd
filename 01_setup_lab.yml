@@ -57,7 +57,7 @@
 
     - name: Start svc vm
       community.libvirt.virt:
-        name: "{{  hostvars[groups['svc'][0]] }}"
+        name: "{{  groups['svc'][0] }}"
         state: running
       delegate_to: localhost
       when: hostvars[groups['svc'][0]]['virtual']
@@ -82,7 +82,7 @@
       ansible.builtin.include_role:
         name: prepare
 
-    - name: Start svc vm
+    - name: Start loadbalancer vm
       community.libvirt.virt:
         name: "{{ groups['loadbalancer'][0] }}"
         state: running
