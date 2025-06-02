@@ -57,7 +57,7 @@
 
     - name: Start svc vm
       community.libvirt.virt:
-        name: "{{ groups['svc'][0] }}"
+        name: "{{  hostvars[groups['svc'][0]] }}"
         state: running
       delegate_to: localhost
       when: hostvars[groups['svc'][0]]['virtual']
